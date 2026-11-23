@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@keyframes balloonFloat {
+  0% {
+    transform: translateY(0px) rotate(-2.5deg);
+  }
+  50% {
+    transform: translateY(-18px) rotate(2.5deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(-2.5deg);
+  }
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+}

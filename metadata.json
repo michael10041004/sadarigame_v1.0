@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix 경품 당첨2_깃허브",
+  "description": "참여자와 경품을 사다리타기로 매핑하고 특별 경품 당첨 시 화려한 풍선 축하 연출을 제공하는 사다리타기 게임",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

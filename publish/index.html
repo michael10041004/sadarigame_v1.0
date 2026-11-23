@@ -1,0 +1,3566 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>윤관의 랜덤 사다리~~ 게임</title>
+    <meta
+      name="description"
+      content="참여자와 경품을 사다리타기로 매핑하고 특별 경품 당첨 시 대형 풍선 축하 연출을 제공하는 윤관의 랜덤 사다리~~ 게임"
+    />
+    <meta property="og:title" content="윤관의 랜덤 사다리~~ 게임" />
+    <meta
+      property="og:description"
+      content="참여자와 경품을 사다리타기로 매핑하고 특별 경품 당첨 시 대형 풍선 축하 연출을 제공하는 윤관의 랜덤 사다리~~ 게임"
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Pretendard:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS v4 Browser CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Pretendard", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      }
+
+      @keyframes balloonFloat {
+        0% {
+          transform: translateY(0px) rotate(-2.5deg);
+        }
+        50% {
+          transform: translateY(-18px) rotate(2.5deg);
+        }
+        100% {
+          transform: translateY(0px) rotate(-2.5deg);
+        }
+      }
+
+      @keyframes gentlePulse {
+        0%, 100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.85;
+          transform: scale(0.98);
+        }
+      }
+    </style>
+
+    <!-- React 18 UMD & Babel Standalone CDN (works directly via file:// double-click & GitHub Pages) -->
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.10/babel.min.js"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased selection:bg-amber-100 selection:text-amber-900 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="react">
+      const { useState, useMemo, useCallback, useEffect, useRef } = React;
+
+      // =========================================================================
+      // Lucide Icons (inline SVG components matching lucide-react v0.546.0)
+      // =========================================================================
+      const createLucideIcon = (nodes) => ({ className = '', ...props }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+          {...props}
+        >
+          {nodes.map(([Tag, attrs], idx) => (
+            <Tag key={idx} {...attrs} />
+          ))}
+        </svg>
+      );
+
+      const Volume2 = createLucideIcon([
+        ['path', { d: 'M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z' }],
+        ['path', { d: 'M16 9a5 5 0 0 1 0 6' }],
+        ['path', { d: 'M19.364 18.364a9 9 0 0 0 0-12.728' }],
+      ]);
+      const VolumeX = createLucideIcon([
+        ['path', { d: 'M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z' }],
+        ['line', { x1: '22', x2: '16', y1: '9', y2: '15' }],
+        ['line', { x1: '16', x2: '22', y1: '9', y2: '15' }],
+      ]);
+      const Sparkles = createLucideIcon([
+        ['path', { d: 'M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z' }],
+        ['path', { d: 'M20 2v4' }],
+        ['path', { d: 'M22 4h-4' }],
+        ['circle', { cx: '4', cy: '20', r: '2' }],
+      ]);
+      const RefreshCw = createLucideIcon([
+        ['path', { d: 'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8' }],
+        ['path', { d: 'M21 3v5h-5' }],
+        ['path', { d: 'M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16' }],
+        ['path', { d: 'M8 16H3v5' }],
+      ]);
+      const Trophy = createLucideIcon([
+        ['path', { d: 'M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978' }],
+        ['path', { d: 'M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978' }],
+        ['path', { d: 'M18 9h1.5a1 1 0 0 0 0-5H18' }],
+        ['path', { d: 'M4 22h16' }],
+        ['path', { d: 'M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z' }],
+        ['path', { d: 'M6 9H4.5a1 1 0 0 1 0-5H6' }],
+      ]);
+      const Settings = createLucideIcon([
+        ['path', { d: 'M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915' }],
+        ['circle', { cx: '12', cy: '12', r: '3' }],
+      ]);
+      const Shuffle = createLucideIcon([
+        ['path', { d: 'm18 14 4 4-4 4' }],
+        ['path', { d: 'm18 2 4 4-4 4' }],
+        ['path', { d: 'M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22' }],
+        ['path', { d: 'M2 6h1.972a4 4 0 0 1 3.6 2.2' }],
+        ['path', { d: 'M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45' }],
+      ]);
+      const RotateCcw = createLucideIcon([
+        ['path', { d: 'M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8' }],
+        ['path', { d: 'M3 3v5h5' }],
+      ]);
+      const Plus = createLucideIcon([
+        ['path', { d: 'M5 12h14' }],
+        ['path', { d: 'M12 5v14' }],
+      ]);
+      const Trash2 = createLucideIcon([
+        ['path', { d: 'M10 11v6' }],
+        ['path', { d: 'M14 11v6' }],
+        ['path', { d: 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6' }],
+        ['path', { d: 'M3 6h18' }],
+        ['path', { d: 'M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' }],
+      ]);
+      const Gift = createLucideIcon([
+        ['rect', { x: '3', y: '8', width: '18', height: '4', rx: '1' }],
+        ['path', { d: 'M12 8v13' }],
+        ['path', { d: 'M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7' }],
+        ['path', { d: 'M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5' }],
+      ]);
+      const Users = createLucideIcon([
+        ['path', { d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' }],
+        ['path', { d: 'M16 3.128a4 4 0 0 1 0 7.744' }],
+        ['path', { d: 'M22 21v-2a4 4 0 0 0-3-3.87' }],
+        ['circle', { cx: '9', cy: '7', r: '4' }],
+      ]);
+      const BookmarkPlus = createLucideIcon([
+        ['path', { d: 'm19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z' }],
+        ['line', { x1: '12', x2: '12', y1: '7', y2: '13' }],
+        ['line', { x1: '15', x2: '9', y1: '10', y2: '10' }],
+      ]);
+      const Check = createLucideIcon([
+        ['path', { d: 'M20 6 9 17l-5-5' }],
+      ]);
+      const X = createLucideIcon([
+        ['path', { d: 'M18 6 6 18' }],
+        ['path', { d: 'm6 6 12 12' }],
+      ]);
+      const Settings2 = createLucideIcon([
+        ['path', { d: 'M14 17H5' }],
+        ['path', { d: 'M19 7h-9' }],
+        ['circle', { cx: '17', cy: '17', r: '3' }],
+        ['circle', { cx: '7', cy: '7', r: '3' }],
+      ]);
+      const Edit3 = createLucideIcon([
+        ['path', { d: 'M13 21h8' }],
+        ['path', { d: 'M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z' }],
+      ]);
+      const UserPlus = createLucideIcon([
+        ['path', { d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' }],
+        ['circle', { cx: '9', cy: '7', r: '4' }],
+        ['line', { x1: '19', x2: '19', y1: '8', y2: '14' }],
+        ['line', { x1: '22', x2: '16', y1: '11', y2: '11' }],
+      ]);
+      const UserMinus = createLucideIcon([
+        ['path', { d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' }],
+        ['circle', { cx: '9', cy: '7', r: '4' }],
+        ['line', { x1: '22', x2: '16', y1: '11', y2: '11' }],
+      ]);
+      const FileText = createLucideIcon([
+        ['path', { d: 'M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z' }],
+        ['path', { d: 'M14 2v4a2 2 0 0 0 2 2h4' }],
+        ['path', { d: 'M10 9H8' }],
+        ['path', { d: 'M16 13H8' }],
+        ['path', { d: 'M16 17H8' }],
+      ]);
+      const List = createLucideIcon([
+        ['path', { d: 'M3 5h.01' }],
+        ['path', { d: 'M3 12h.01' }],
+        ['path', { d: 'M3 19h.01' }],
+        ['path', { d: 'M8 5h13' }],
+        ['path', { d: 'M8 12h13' }],
+        ['path', { d: 'M8 19h13' }],
+      ]);
+      const Play = createLucideIcon([
+        ['path', { d: 'M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z' }],
+      ]);
+      const FastForward = createLucideIcon([
+        ['path', { d: 'M12 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 12 18z' }],
+        ['path', { d: 'M2 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 2 18z' }],
+      ]);
+      const Eye = createLucideIcon([
+        ['path', { d: 'M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0' }],
+        ['circle', { cx: '12', cy: '12', r: '3' }],
+      ]);
+      const EyeOff = createLucideIcon([
+        ['path', { d: 'M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49' }],
+        ['path', { d: 'M14.084 14.158a3 3 0 0 1-4.242-4.242' }],
+        ['path', { d: 'M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143' }],
+        ['path', { d: 'm2 2 20 20' }],
+      ]);
+      const CheckCircle2 = createLucideIcon([
+        ['circle', { cx: '12', cy: '12', r: '10' }],
+        ['path', { d: 'm9 12 2 2 4-4' }],
+      ]);
+      const Download = createLucideIcon([
+        ['path', { d: 'M12 15V3' }],
+        ['path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }],
+        ['path', { d: 'm7 10 5 5 5-5' }],
+      ]);
+      const PartyPopper = createLucideIcon([
+        ['path', { d: 'M5.8 11.3 2 22l10.7-3.79' }],
+        ['path', { d: 'M4 3h.01' }],
+        ['path', { d: 'M22 8h.01' }],
+        ['path', { d: 'M15 2h.01' }],
+        ['path', { d: 'M22 20h.01' }],
+        ['path', { d: 'm22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10' }],
+        ['path', { d: 'm22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17' }],
+        ['path', { d: 'm11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7' }],
+        ['path', { d: 'M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z' }],
+      ]);
+      const Copy = createLucideIcon([
+        ['rect', { width: '14', height: '14', x: '8', y: '8', rx: '2', ry: '2' }],
+        ['path', { d: 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2' }],
+      ]);
+
+      // =========================================================================
+      // constants/gameConfig.ts
+      // =========================================================================
+      const MIN_PARTICIPANTS = 2;
+      const MAX_PARTICIPANTS = 20;
+
+      const QUICK_COUNT_OPTIONS = [4, 6, 8, 10, 12, 16, 20];
+
+      const DEFAULT_NAMES = [
+        '김민수', '이지은', '박서준', '정지우', '최예은',
+        '강하준', '윤수빈', '임도현', '한유나', '송태민',
+        '오세훈', '신다은', '정우성', '배수지', '안효섭',
+        '김태리', '이도현', '박보영', '남주혁', '전여빈'
+      ];
+
+      const PALETTES = [
+        { color: '#8B5CF6', bgLight: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-700' },
+        { color: '#3B82F6', bgLight: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-700' },
+        { color: '#10B981', bgLight: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700' },
+        { color: '#F59E0B', bgLight: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-800' },
+        { color: '#F97316', bgLight: 'bg-orange-50', border: 'border-orange-300', text: 'text-orange-700' },
+        { color: '#EF4444', bgLight: 'bg-rose-50', border: 'border-rose-300', text: 'text-rose-700' },
+        { color: '#334155', bgLight: 'bg-slate-100', border: 'border-slate-300', text: 'text-slate-800' },
+        { color: '#14B8A6', bgLight: 'bg-teal-50', border: 'border-teal-300', text: 'text-teal-700' },
+        { color: '#EC4899', bgLight: 'bg-pink-50', border: 'border-pink-300', text: 'text-pink-700' },
+        { color: '#6366F1', bgLight: 'bg-indigo-50', border: 'border-indigo-300', text: 'text-indigo-700' },
+        { color: '#06B6D4', bgLight: 'bg-cyan-50', border: 'border-cyan-300', text: 'text-cyan-700' },
+        { color: '#84CC16', bgLight: 'bg-lime-50', border: 'border-lime-300', text: 'text-lime-700' },
+        { color: '#7C3AED', bgLight: 'bg-violet-50', border: 'border-violet-300', text: 'text-violet-700' },
+        { color: '#D946EF', bgLight: 'bg-fuchsia-50', border: 'border-fuchsia-300', text: 'text-fuchsia-700' },
+        { color: '#0284C7', bgLight: 'bg-sky-50', border: 'border-sky-300', text: 'text-sky-700' },
+        { color: '#DC2626', bgLight: 'bg-red-50', border: 'border-red-300', text: 'text-red-700' },
+        { color: '#CA8A04', bgLight: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-800' },
+        { color: '#16A34A', bgLight: 'bg-green-50', border: 'border-green-300', text: 'text-green-700' },
+        { color: '#52525B', bgLight: 'bg-zinc-100', border: 'border-zinc-300', text: 'text-zinc-800' },
+        { color: '#C2410C', bgLight: 'bg-orange-100', border: 'border-orange-400', text: 'text-orange-900' },
+      ];
+
+      function getPaletteForIndex(index) {
+        return PALETTES[index % PALETTES.length];
+      }
+
+      // =========================================================================
+      // utils/audio.ts
+      // =========================================================================
+      let audioCtx = null;
+
+      function getAudioContext() {
+        if (typeof window === 'undefined') return null;
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        return audioCtx;
+      }
+
+      const soundManager = {
+        muted: false,
+
+        toggleMute() {
+          this.muted = !this.muted;
+          return this.muted;
+        },
+
+        playStep() {
+          if (this.muted) return;
+          try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(320, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.04);
+            gain.gain.setValueAtTime(0.04, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.04);
+          } catch {}
+        },
+
+        playTurn() {
+          if (this.muted) return;
+          try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.06);
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.07);
+          } catch {}
+        },
+
+        playArrival() {
+          if (this.muted) return;
+          try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const freqs = [523.25, 659.25, 783.99];
+            freqs.forEach((freq, idx) => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.05);
+              gain.gain.setValueAtTime(0.09, ctx.currentTime + idx * 0.05);
+              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.05 + 0.4);
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(ctx.currentTime + idx * 0.05);
+              osc.stop(ctx.currentTime + idx * 0.05 + 0.45);
+            });
+          } catch {}
+        },
+
+        playBalloonInflate() {
+          if (this.muted) return;
+          try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.8);
+
+            gain.gain.setValueAtTime(0.01, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.5);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.85);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.85);
+          } catch {}
+        },
+
+        playSpecialFanfare() {
+          if (this.muted) return;
+          try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const notes = [
+              { f: 523.25, t: 0.0, d: 0.15 },
+              { f: 659.25, t: 0.14, d: 0.15 },
+              { f: 783.99, t: 0.28, d: 0.2 },
+              { f: 1046.5, t: 0.46, d: 0.9 },
+            ];
+
+            notes.forEach((note) => {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(note.f, ctx.currentTime + note.t);
+
+              gain.gain.setValueAtTime(0.15, ctx.currentTime + note.t);
+              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + note.t + note.d);
+
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(ctx.currentTime + note.t);
+              osc.stop(ctx.currentTime + note.t + note.d);
+            });
+          } catch {}
+        },
+
+        playPop() {
+          if (this.muted) return;
+          try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const bufferSize = ctx.sampleRate * 0.08;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+              data[i] = Math.random() * 2 - 1;
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1200, ctx.currentTime);
+            filter.Q.setValueAtTime(3, ctx.currentTime);
+
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.07);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+
+            noise.start();
+            noise.stop(ctx.currentTime + 0.08);
+
+            const osc = ctx.createOscillator();
+            const oscGain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(140, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
+            oscGain.gain.setValueAtTime(0.2, ctx.currentTime);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+
+            osc.connect(oscGain);
+            oscGain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.08);
+          } catch {}
+        },
+      };
+
+      // =========================================================================
+      // utils/confetti.ts
+      // =========================================================================
+      const CELEBRATION_COLORS = [
+        '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6',
+        '#3B82F6', '#10B981', '#F97316', '#FBBF24',
+        '#06B6D4', '#A855F7', '#FFD700'
+      ];
+
+      function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+        let rot = (Math.PI / 2) * 3;
+        let x = cx;
+        let y = cy;
+        const step = Math.PI / spikes;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+          x = cx + Math.cos(rot) * outerRadius;
+          y = cy + Math.sin(rot) * outerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+
+          x = cx + Math.cos(rot) * innerRadius;
+          y = cy + Math.sin(rot) * innerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+      }
+
+      function launchConfetti(canvas, options) {
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return () => {};
+        const context = ctx;
+
+        const count = options?.count ?? 150;
+        const width = (canvas.width = window.innerWidth);
+        const height = (canvas.height = window.innerHeight);
+
+        const originX = (options?.originX ?? 0.5) * width;
+        const originY = (options?.originY ?? 0.4) * height;
+        const spread = options?.spread ?? 1;
+
+        const particles = [];
+        const shapes = ['rect', 'circle', 'ribbon', 'star'];
+
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = (Math.random() * 12 + 6) * spread;
+          particles.push({
+            x: originX + (Math.random() - 0.5) * 40,
+            y: originY + (Math.random() - 0.5) * 40,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - (Math.random() * 4 + 2),
+            angle: Math.random() * Math.PI * 2,
+            vAngle: (Math.random() - 0.5) * 0.2,
+            size: Math.random() * 8 + 6,
+            color: CELEBRATION_COLORS[Math.floor(Math.random() * CELEBRATION_COLORS.length)],
+            shape: shapes[Math.floor(Math.random() * shapes.length)],
+            alpha: 1,
+            decay: Math.random() * 0.008 + 0.006,
+          });
+        }
+
+        let animationFrameId;
+
+        function render() {
+          context.clearRect(0, 0, width, height);
+
+          let active = false;
+
+          for (const p of particles) {
+            if (p.alpha <= 0.01) continue;
+            active = true;
+
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.22;
+            p.vx *= 0.985;
+            p.angle += p.vAngle;
+            p.alpha = Math.max(0, p.alpha - p.decay);
+
+            context.save();
+            context.globalAlpha = p.alpha;
+            context.fillStyle = p.color;
+            context.translate(p.x, p.y);
+            context.rotate(p.angle);
+
+            if (p.shape === 'rect') {
+              context.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.4);
+            } else if (p.shape === 'circle') {
+              context.beginPath();
+              context.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+              context.fill();
+            } else if (p.shape === 'ribbon') {
+              context.fillRect(-p.size, -2, p.size * 2, 4);
+            } else if (p.shape === 'star') {
+              drawStar(context, 0, 0, 5, p.size * 0.7, p.size * 0.35);
+              context.fill();
+            }
+
+            context.restore();
+          }
+
+          if (active) {
+            animationFrameId = requestAnimationFrame(render);
+          } else {
+            context.clearRect(0, 0, width, height);
+          }
+        }
+
+        animationFrameId = requestAnimationFrame(render);
+
+        return () => {
+          cancelAnimationFrame(animationFrameId);
+          context.clearRect(0, 0, width, height);
+        };
+      }
+
+      // =========================================================================
+      // utils/exportImage.ts
+      // =========================================================================
+      function drawRoundedRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+      }
+
+      async function exportResultsToJpg(
+        results,
+        customTitle = '윤관의 랜덤 사다리~~ 게임 최종 결과'
+      ) {
+        try {
+          const width = 1000;
+          const specialWinners = results.filter((r) => r.isSpecial);
+          const hasSpecial = specialWinners.length > 0;
+
+          const headerHeight = 160;
+          const specialBannerHeight = hasSpecial ? 110 : 0;
+          const rowHeight = 64;
+          const rowGap = 12;
+          const rowsTotalHeight = results.length * (rowHeight + rowGap);
+          const footerHeight = 90;
+          const totalHeight = headerHeight + specialBannerHeight + rowsTotalHeight + footerHeight + 40;
+
+          const canvas = document.createElement('canvas');
+          const scale = 2;
+          canvas.width = width * scale;
+          canvas.height = totalHeight * scale;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return false;
+
+          ctx.scale(scale, scale);
+
+          // 1. Overall Background
+          ctx.fillStyle = '#F8FAFC';
+          ctx.fillRect(0, 0, width, totalHeight);
+
+          // 2. Header Gradient Banner
+          const grad = ctx.createLinearGradient(0, 0, width, headerHeight);
+          grad.addColorStop(0, '#D97706');
+          grad.addColorStop(0.5, '#E11D48');
+          grad.addColorStop(1, '#7C3AED');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, width, headerHeight);
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 34px -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`🎉 ${customTitle}`, width / 2, 60);
+
+          const now = new Date();
+          const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(
+            now.getDate()
+          ).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(
+            2,
+            '0'
+          )}`;
+          ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.fillText(`총 ${results.length}명 참여 · 추첨 일시: ${dateStr}`, width / 2, 105);
+
+          let currentY = headerHeight + 24;
+
+          // 3. Special Winner Highlight Banner
+          if (hasSpecial) {
+            const bannerX = 50;
+            const bannerWidth = width - 100;
+            const bannerH = 86;
+
+            ctx.fillStyle = '#FEF3C7';
+            drawRoundedRect(ctx, bannerX, currentY, bannerWidth, bannerH, 16);
+            ctx.fill();
+
+            ctx.strokeStyle = '#F59E0B';
+            ctx.lineWidth = 2;
+            drawRoundedRect(ctx, bannerX, currentY, bannerWidth, bannerH, 16);
+            ctx.stroke();
+
+            ctx.fillStyle = '#92400E';
+            ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('★ 특별 지정 경품 당첨 ★', bannerX + 24, currentY + 30);
+
+            const specialText = specialWinners
+              .map((w) => `🎈 ${w.participantName} 님 ➔ ${w.prizeName}`)
+              .join('   |   ');
+
+            ctx.fillStyle = '#78350F';
+            ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+            ctx.fillText(specialText, bannerX + 24, currentY + 58);
+
+            currentY += bannerH + 24;
+          }
+
+          // 4. Participant - Prize Rows
+          const rowX = 50;
+          const rowWidth = width - 100;
+
+          results.forEach((item, index) => {
+            const isSpec = item.isSpecial;
+
+            ctx.fillStyle = isSpec ? '#FFFBEB' : '#FFFFFF';
+            drawRoundedRect(ctx, rowX, currentY, rowWidth, rowHeight, 14);
+            ctx.fill();
+
+            ctx.strokeStyle = isSpec ? '#FCD34D' : '#E2E8F0';
+            ctx.lineWidth = isSpec ? 2 : 1;
+            drawRoundedRect(ctx, rowX, currentY, rowWidth, rowHeight, 14);
+            ctx.stroke();
+
+            const badgeX = rowX + 38;
+            const badgeY = currentY + rowHeight / 2;
+            ctx.fillStyle = item.participantColor || '#3B82F6';
+            ctx.beginPath();
+            ctx.arc(badgeX, badgeY, 17, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(index + 1), badgeX, badgeY);
+
+            ctx.fillStyle = '#0F172A';
+            ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(item.participantName, rowX + 72, badgeY);
+
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('➔', rowX + 380, badgeY);
+
+            ctx.fillStyle = isSpec ? '#78350F' : '#1E293B';
+            ctx.font = isSpec
+              ? '900 19px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif'
+              : 'bold 18px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+            ctx.textAlign = 'left';
+
+            const prizeDisplay = isSpec ? `🎈 ${item.prizeName}` : item.prizeName;
+            ctx.fillText(prizeDisplay, rowX + 430, badgeY);
+
+            if (isSpec) {
+              ctx.fillStyle = '#D97706';
+              ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+              ctx.textAlign = 'right';
+              ctx.fillText('★ 특별 경품', rowX + rowWidth - 28, badgeY);
+            }
+
+            currentY += rowHeight + rowGap;
+          });
+
+          // 5. Footer Watermark
+          currentY += 16;
+          ctx.fillStyle = '#64748B';
+          ctx.font = '500 14px -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('공정하고 투명한 추첨 · 윤관의 랜덤 사다리~~ 게임', width / 2, currentY + 20);
+
+          // 6. Export to JPG
+          return new Promise((resolve) => {
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) {
+                  resolve(false);
+                  return;
+                }
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const fileDate = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(
+                  now.getDate()
+                ).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(
+                  2,
+                  '0'
+                )}`;
+                a.download = `윤관의랜덤사다리게임_결과_${fileDate}.jpg`;
+                a.href = url;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                resolve(true);
+              },
+              'image/jpeg',
+              0.96
+            );
+          });
+        } catch (err) {
+          console.error('Failed to export image:', err);
+          return false;
+        }
+      }
+
+      // =========================================================================
+      // utils/groupStorage.ts
+      // =========================================================================
+      const STORAGE_KEY = 'ladder_saved_participant_groups_v1';
+
+      const DEFAULT_GROUPS = [
+        {
+          id: 'group-default-1',
+          name: '🏢 우리 팀 (10명)',
+          members: ['김민수', '이지은', '박서준', '정지우', '최예은', '강하준', '윤수빈', '임도현', '한유나', '송태민'],
+          createdAt: Date.now() - 120000,
+        },
+        {
+          id: 'group-default-2',
+          name: '💻 개발본부 스쿼드 (16명)',
+          members: [
+            '팀장 철수', '프론트 영희', '백엔드 민호', '인프라 지수',
+            '데이터 준혁', 'QA 수진', '모바일 태양', 'UI/UX 아름',
+            '프로덕트 진우', '서버 성민', '데브옵스 채원', '보안 기훈',
+            'ML엔지니어 소희', '클라우드 동건', '플랫폼 혜진', '테스터 도균'
+          ],
+          createdAt: Date.now() - 90000,
+        },
+        {
+          id: 'group-default-3',
+          name: '☕ 소모임 / 스터디 (6명)',
+          members: ['서연', '민재', '하린', '도윤', '시우', '채원'],
+          createdAt: Date.now() - 60000,
+        },
+      ];
+
+      function getSavedGroups() {
+        if (typeof window === 'undefined') return DEFAULT_GROUPS;
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_GROUPS));
+            return DEFAULT_GROUPS;
+          }
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+          return DEFAULT_GROUPS;
+        } catch {
+          return DEFAULT_GROUPS;
+        }
+      }
+
+      function saveNewGroup(name, members) {
+        const current = getSavedGroups();
+        const trimmedName = name.trim() || `그룹 ${current.length + 1}`;
+        const validMembers = members
+          .map((m) => m.trim())
+          .filter(Boolean)
+          .slice(0, MAX_PARTICIPANTS);
+
+        const fallbackMembers = Array.from(
+          { length: Math.max(MIN_PARTICIPANTS, validMembers.length) },
+          (_, i) => `참여자 ${i + 1}`
+        );
+
+        const newGroup = {
+          id: `group-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          name: trimmedName,
+          members: validMembers.length >= MIN_PARTICIPANTS ? validMembers : fallbackMembers,
+          createdAt: Date.now(),
+        };
+
+        const updated = [newGroup, ...current];
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch {}
+        return updated;
+      }
+
+      function deleteSavedGroup(groupId) {
+        const current = getSavedGroups();
+        const updated = current.filter((g) => g.id !== groupId);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch {}
+        return updated;
+      }
+
+      function updateSavedGroup(groupId, name, members) {
+        const current = getSavedGroups();
+        const validMembers = members
+          .map((m) => m.trim())
+          .filter(Boolean)
+          .slice(0, MAX_PARTICIPANTS);
+
+        const updated = current.map((g) => {
+          if (g.id === groupId) {
+            return {
+              ...g,
+              name: name.trim() || g.name,
+              members: validMembers.length >= MIN_PARTICIPANTS ? validMembers : g.members,
+            };
+          }
+          return g;
+        });
+
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch {}
+        return updated;
+      }
+
+      // =========================================================================
+      // utils/ladderGenerator.ts
+      // =========================================================================
+      function generateLadderRungs(numCols, density = 'normal') {
+        const rungs = [];
+        const minSpacing = numCols > 12 ? 0.022 : 0.035;
+
+        const rungsPerGap = density === 'low' ? 3 : density === 'high' ? 6 : 4;
+        const numGaps = numCols - 1;
+        const totalRungs = numGaps * rungsPerGap;
+
+        const totalSlots = Math.max(totalRungs * 2, 40);
+        const occupiedHeights = [];
+
+        let attempts = 0;
+        const maxAttempts = Math.max(2500, numCols * 200);
+
+        for (let gap = 0; gap < numGaps; gap++) {
+          let placedForGap = 0;
+          while (placedForGap < rungsPerGap && attempts < maxAttempts) {
+            attempts++;
+            const slotIndex = Math.floor(Math.random() * (totalSlots - 2)) + 1;
+            const y = 0.08 + (slotIndex / totalSlots) * 0.84 + (Math.random() - 0.5) * 0.015;
+
+            const conflict = occupiedHeights.some((item) => {
+              const isSameGap = item.col === gap;
+              const isNeighbor = Math.abs(item.col - gap) <= 1;
+              const dist = Math.abs(item.y - y);
+              if (isSameGap && dist < minSpacing * 1.5) return true;
+              if (isNeighbor && dist < minSpacing) return true;
+              return false;
+            });
+
+            if (!conflict) {
+              occupiedHeights.push({ col: gap, y });
+              rungs.push({
+                id: `rung-${gap}-${placedForGap}-${Math.random().toString(36).slice(2, 6)}`,
+                leftCol: gap,
+                rightCol: gap + 1,
+                yFraction: y,
+              });
+              placedForGap++;
+            }
+          }
+        }
+
+        rungs.sort((a, b) => a.yFraction - b.yFraction);
+        return rungs;
+      }
+
+      function traceParticipantPath(startCol, rungs) {
+        let currentCol = startCol;
+        let currentY = 0;
+        const path = [{ x: currentCol, y: 0 }];
+
+        const sortedRungs = [...rungs].sort((a, b) => a.yFraction - b.yFraction);
+
+        for (const rung of sortedRungs) {
+          if (rung.yFraction > currentY) {
+            if (rung.leftCol === currentCol) {
+              path.push({ x: currentCol, y: rung.yFraction });
+              currentCol = rung.rightCol;
+              path.push({ x: currentCol, y: rung.yFraction });
+              currentY = rung.yFraction;
+            } else if (rung.rightCol === currentCol) {
+              path.push({ x: currentCol, y: rung.yFraction });
+              currentCol = rung.leftCol;
+              path.push({ x: currentCol, y: rung.yFraction });
+              currentY = rung.yFraction;
+            }
+          }
+        }
+
+        path.push({ x: currentCol, y: 1.0 });
+
+        return { path, endCol: currentCol };
+      }
+
+      function computeAllResults(participants, prizes, rungs) {
+        return participants.map((participant, index) => {
+          const { path, endCol } = traceParticipantPath(index, rungs);
+          const prize = prizes[endCol] || {
+            id: `fallback-${endCol}`,
+            name: `경품 ${endCol + 1}`,
+            isSpecial: false,
+          };
+
+          return {
+            participantId: participant.id,
+            participantName: participant.name,
+            participantColor: participant.color,
+            prizeId: prize.id,
+            prizeName: prize.name,
+            isSpecial: prize.isSpecial,
+            endCol,
+            path,
+          };
+        });
+      }
+
+      // =========================================================================
+      // components/TopBar.tsx
+      // =========================================================================
+      const TopBar = ({
+        currentScreen,
+        onNavigate,
+        isMuted,
+        onToggleSound,
+        onResetOrShuffle,
+        hasSpecialPrize,
+      }) => {
+        return (
+          <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4 md:gap-8">
+              {/* Zone 1: Brand Wordmark */}
+              <div className="flex items-center gap-2.5 shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 flex items-center justify-center text-white shadow-sm shadow-rose-500/20">
+                  <Trophy className="w-5 h-5 text-white" />
+                </div>
+                <button
+                  onClick={() => onNavigate('SETUP')}
+                  className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 whitespace-nowrap hover:opacity-85 transition-opacity flex items-center gap-1.5"
+                >
+                  <span>윤관의 랜덤 사다리~~ 게임</span>
+                  {hasSpecialPrize && (
+                    <span className="hidden sm:inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200/80">
+                      특별 경품 ON
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Zone 2: Clean single-line nav / actions */}
+              <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+                <button
+                  onClick={() => onNavigate('SETUP')}
+                  className={`transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+                    currentScreen === 'SETUP' ? 'text-slate-950 font-semibold' : 'hover:text-slate-900'
+                  }`}
+                >
+                  <Settings className="w-4 h-4 text-slate-400" />
+                  <span>참여자 & 경품 설정</span>
+                </button>
+
+                <button
+                  onClick={() => onNavigate('LADDER')}
+                  className={`transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+                    currentScreen === 'LADDER' ? 'text-slate-950 font-semibold' : 'hover:text-slate-900'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>사다리타기 보드</span>
+                </button>
+
+                <button
+                  onClick={() => onNavigate('SUMMARY')}
+                  className={`transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+                    currentScreen === 'SUMMARY' ? 'text-slate-950 font-semibold' : 'hover:text-slate-900'
+                  }`}
+                >
+                  <Trophy className="w-4 h-4 text-emerald-500" />
+                  <span>최종 결과 매핑</span>
+                </button>
+
+                <button
+                  onClick={onToggleSound}
+                  aria-label={isMuted ? '음향 켜기' : '음향 끄기'}
+                  className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                  title={isMuted ? '음향 켜기' : '음향 끄기'}
+                >
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-600" />}
+                </button>
+              </nav>
+
+              {/* Zone 3: 1 Primary Action */}
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  onClick={onToggleSound}
+                  aria-label={isMuted ? '음향 켜기' : '음향 끄기'}
+                  className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+                >
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-600" />}
+                </button>
+
+                {currentScreen === 'SETUP' ? (
+                  <button
+                    onClick={() => onNavigate('LADDER')}
+                    className="px-4 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-sm shadow-slate-900/10 whitespace-nowrap shrink-0 flex items-center gap-2 active:scale-95"
+                  >
+                    <span>사다리 시작</span>
+                    <span aria-hidden="true">→</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={onResetOrShuffle}
+                    className="px-4 py-2 text-sm font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition-all shadow-xs whitespace-nowrap shrink-0 flex items-center gap-1.5 active:scale-95"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+                    <span>사다리 재배치</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </header>
+        );
+      };
+
+      // =========================================================================
+      // components/SetupView.tsx
+      // =========================================================================
+      const PRESET_THEMES = [
+        {
+          name: '🎉 회식 & 모임 선물 (20종)',
+          prizes: [
+            { name: '1등: 백화점 상품권 10만원', isSpecial: true },
+            { name: '2등: 한우 선물세트', isSpecial: false },
+            { name: '3등: 치킨 기프티콘', isSpecial: false },
+            { name: '배달의민족 3만원권', isSpecial: false },
+            { name: '배달의민족 2만원권', isSpecial: false },
+            { name: '스타벅스 디저트 세트', isSpecial: false },
+            { name: '올리브영 2만원권', isSpecial: false },
+            { name: '올리브영 1만원권', isSpecial: false },
+            { name: '영화 2인 관람권', isSpecial: false },
+            { name: '편의점 1만원권', isSpecial: false },
+            { name: '편의점 5천원권', isSpecial: false },
+            { name: '비타500 한 상자', isSpecial: false },
+            { name: '홍삼 스틱 1박스', isSpecial: false },
+            { name: '베스킨라빈스 파인트', isSpecial: false },
+            { name: '맘스터치 싸이버거 세트', isSpecial: false },
+            { name: '이디야 커피 쿠폰', isSpecial: false },
+            { name: '따뜻한 유자차 쿠폰', isSpecial: false },
+            { name: '에너지 드링크 2캔', isSpecial: false },
+            { name: '초콜릿 간식 꾸러미', isSpecial: false },
+            { name: '다음 기회에 (참가상)', isSpecial: false },
+          ],
+        },
+        {
+          name: '🏆 1등~20등 순위형',
+          prizes: [
+            { name: '1등 (★대박 대상)', isSpecial: true },
+            { name: '2등 (최우수상)', isSpecial: false },
+            { name: '3등 (우수상)', isSpecial: false },
+            { name: '4등 (장려상)', isSpecial: false },
+            { name: '5등 (특별상)', isSpecial: false },
+            { name: '6등 (인기상)', isSpecial: false },
+            { name: '7등', isSpecial: false },
+            { name: '8등', isSpecial: false },
+            { name: '9등', isSpecial: false },
+            { name: '10등 (행운상)', isSpecial: false },
+            { name: '11등', isSpecial: false },
+            { name: '12등', isSpecial: false },
+            { name: '13등', isSpecial: false },
+            { name: '14등', isSpecial: false },
+            { name: '15등', isSpecial: false },
+            { name: '16등', isSpecial: false },
+            { name: '17등', isSpecial: false },
+            { name: '18등', isSpecial: false },
+            { name: '19등 (아차상)', isSpecial: false },
+            { name: '20등 (파이팅상)', isSpecial: false },
+          ],
+        },
+        {
+          name: '☕ 카페 & 디저트 (20종)',
+          prizes: [
+            { name: '스타벅스 텀블러 세트', isSpecial: true },
+            { name: '투썸플레이스 홀케이크', isSpecial: false },
+            { name: '배스킨라빈스 쿼터', isSpecial: false },
+            { name: '스타벅스 아메리카노 2잔', isSpecial: false },
+            { name: '투썸 조각케이크 세트', isSpecial: false },
+            { name: '공차 밀크티 L', isSpecial: false },
+            { name: '설빙 인절미빙수', isSpecial: false },
+            { name: '이디야 바닐라라떼', isSpecial: false },
+            { name: '컴포즈 커피 쿠폰', isSpecial: false },
+            { name: '메가커피 아메리카노', isSpecial: false },
+            { name: '던킨도너츠 6개팩', isSpecial: false },
+            { name: '크리스피크림 도넛 1박스', isSpecial: false },
+            { name: '맥도날드 소프트콘 5개', isSpecial: false },
+            { name: '서브웨이 쿠키 3개 세트', isSpecial: false },
+            { name: '파리바게뜨 롤케이크', isSpecial: false },
+            { name: '뚜레쥬르 식빵 세트', isSpecial: false },
+            { name: '달콤한 딸기 마카롱 2개', isSpecial: false },
+            { name: '편의점 바나나우유', isSpecial: false },
+            { name: '생과일주스 1잔', isSpecial: false },
+            { name: '막대사탕 1개 (기분UP)', isSpecial: false },
+          ],
+        },
+        {
+          name: '🎯 복불복 & 꽝 믹스',
+          prizes: [
+            { name: '★ 황금 열쇠 (초대박)', isSpecial: true },
+            { name: '치킨 콤보 세트', isSpecial: false },
+            { name: '커피 기프티콘', isSpecial: false },
+            { name: '꽝 (다음 기회에)', isSpecial: false },
+            { name: '꽝 (자리 정리 당번)', isSpecial: false },
+            { name: '편의점 1만원권', isSpecial: false },
+            { name: '꽝 (물 떠오기 당번)', isSpecial: false },
+            { name: '꽝 (모두에게 하트 발사)', isSpecial: false },
+            { name: '간식 꾸러미', isSpecial: false },
+            { name: '꽝 (박수 갈채 받기)', isSpecial: false },
+            { name: '꽝 (커피 심부름 당번)', isSpecial: false },
+            { name: '배달의민족 1만원권', isSpecial: false },
+            { name: '꽝 (30초 동안 칭찬 듣기)', isSpecial: false },
+            { name: '꽝 (노래 한 소절 부르기)', isSpecial: false },
+            { name: '문화상품권 5천원', isSpecial: false },
+            { name: '꽝 (쓰레기통 비우기)', isSpecial: false },
+            { name: '아이스크림 1개', isSpecial: false },
+            { name: '꽝 (하이파이브 릴레이)', isSpecial: false },
+            { name: '꽝 (다음 게임 진행자)', isSpecial: false },
+            { name: '꽝 (따뜻한 응원 한마디)', isSpecial: false },
+          ],
+        },
+      ];
+
+      const SetupView = ({
+        participants,
+        prizes,
+        onUpdateParticipants,
+        onUpdatePrizes,
+        onStartGame,
+      }) => {
+        const count = participants.length;
+        const [savedGroups, setSavedGroups] = useState(() => getSavedGroups());
+        const [groupModalMode, setGroupModalMode] = useState('NONE');
+        const [newGroupName, setNewGroupName] = useState('');
+        const [toast, setToast] = useState(null);
+
+        const [editingGroup, setEditingGroup] = useState(null);
+        const [editName, setEditName] = useState('');
+        const [editMembers, setEditMembers] = useState([]);
+        const [addMemberInput, setAddMemberInput] = useState('');
+        const [isBulkEditMode, setIsBulkEditMode] = useState(false);
+        const [bulkEditText, setBulkEditText] = useState('');
+
+        const showToast = (message) => {
+          setToast(message);
+          setTimeout(() => {
+            setToast((curr) => (curr === message ? null : curr));
+          }, 2800);
+        };
+
+        const handleLoadGroup = (group) => {
+          const members = group.members.slice(0, MAX_PARTICIPANTS);
+          if (members.length < MIN_PARTICIPANTS) return;
+
+          const newParticipants = members.map((name, i) => {
+            const pal = getPaletteForIndex(i);
+            const trimmed = name.trim() || `참여자 ${i + 1}`;
+            return {
+              id: `p-${i + 1}`,
+              name: trimmed,
+              color: pal.color,
+              bgLight: pal.bgLight,
+              border: pal.border,
+              textColor: pal.text,
+              avatarChar: trimmed.charAt(0) || `${i + 1}`,
+            };
+          });
+
+          let newPrizes = [...prizes];
+          if (newParticipants.length > prizes.length) {
+            for (let i = prizes.length; i < newParticipants.length; i++) {
+              newPrizes.push({
+                id: `prize-${i + 1}`,
+                name: `경품 ${i + 1}`,
+                isSpecial: false,
+              });
+            }
+          } else if (newParticipants.length < prizes.length) {
+            newPrizes = newPrizes.slice(0, newParticipants.length);
+          }
+
+          onUpdateParticipants(newParticipants);
+          onUpdatePrizes(newPrizes);
+          setGroupModalMode('NONE');
+          setEditingGroup(null);
+          showToast(`👥 '${group.name}' 그룹 (${members.length}명)을 성공적으로 불러왔습니다!`);
+        };
+
+        const handleSaveGroupSubmit = (e) => {
+          if (e) e.preventDefault();
+          const groupName = newGroupName.trim() || `우리 모임 (${participants.length}명)`;
+          const memberNames = participants.map((p) => p.name.trim() || '참여자');
+          const updated = saveNewGroup(groupName, memberNames);
+          setSavedGroups(updated);
+          setNewGroupName('');
+          setGroupModalMode('NONE');
+          showToast(`💾 '${groupName}' 그룹이 성공적으로 저장되었습니다!`);
+        };
+
+        const handleDeleteGroup = (groupId, groupName) => {
+          const updated = deleteSavedGroup(groupId);
+          setSavedGroups(updated);
+          if (editingGroup?.id === groupId) {
+            setEditingGroup(null);
+          }
+          showToast(`🗑️ '${groupName}' 그룹이 삭제되었습니다.`);
+        };
+
+        const handleResetToDefaultGroups = () => {
+          try {
+            localStorage.setItem('ladder_saved_participant_groups_v1', JSON.stringify(DEFAULT_GROUPS));
+            setSavedGroups(DEFAULT_GROUPS);
+            showToast('기본 추천 그룹 목록으로 복원되었습니다.');
+          } catch {}
+        };
+
+        const handleOpenEditGroup = (group) => {
+          setEditingGroup(group);
+          setEditName(group.name);
+          setEditMembers([...group.members]);
+          setAddMemberInput('');
+          setIsBulkEditMode(false);
+          setBulkEditText(group.members.join('\n'));
+        };
+
+        const handleOpenCreateNewGroup = () => {
+          const blankGroup = {
+            id: `new-${Date.now()}`,
+            name: `새 그룹 (${DEFAULT_NAMES.slice(0, 6).length}명)`,
+            members: DEFAULT_NAMES.slice(0, 6),
+            createdAt: Date.now(),
+          };
+          handleOpenEditGroup(blankGroup);
+        };
+
+        const handleEditMemberName = (index, newName) => {
+          setEditMembers((prev) => {
+            const copy = [...prev];
+            copy[index] = newName;
+            return copy;
+          });
+        };
+
+        const handleRemoveMemberFromEdit = (index) => {
+          if (editMembers.length <= MIN_PARTICIPANTS) {
+            showToast(`참여자는 최소 ${MIN_PARTICIPANTS}명 이상이어야 합니다.`);
+            return;
+          }
+          setEditMembers((prev) => prev.filter((_, i) => i !== index));
+        };
+
+        const handleAddOneMemberToEdit = () => {
+          if (editMembers.length >= MAX_PARTICIPANTS) {
+            showToast(`참여자는 최대 ${MAX_PARTICIPANTS}명까지만 가능합니다.`);
+            return;
+          }
+          const nextIdx = editMembers.length;
+          const defaultName = DEFAULT_NAMES[nextIdx] || `참여자 ${nextIdx + 1}`;
+          setEditMembers((prev) => [...prev, defaultName]);
+        };
+
+        const handleRemoveOneMemberFromEdit = () => {
+          if (editMembers.length <= MIN_PARTICIPANTS) {
+            showToast(`참여자는 최소 ${MIN_PARTICIPANTS}명 이상이어야 합니다.`);
+            return;
+          }
+          setEditMembers((prev) => prev.slice(0, prev.length - 1));
+        };
+
+        const handleAddCustomMemberToEdit = (e) => {
+          if (e) e.preventDefault();
+          const trimmed = addMemberInput.trim();
+          if (!trimmed) return;
+          if (editMembers.length >= MAX_PARTICIPANTS) {
+            showToast(`최대 ${MAX_PARTICIPANTS}명까지만 추가할 수 있습니다.`);
+            return;
+          }
+          setEditMembers((prev) => [...prev, trimmed]);
+          setAddMemberInput('');
+        };
+
+        const handleToggleBulkMode = () => {
+          if (!isBulkEditMode) {
+            setBulkEditText(editMembers.join('\n'));
+            setIsBulkEditMode(true);
+          } else {
+            const parsed = bulkEditText
+              .split(/[\n,]+/)
+              .map((m) => m.trim())
+              .filter(Boolean)
+              .slice(0, MAX_PARTICIPANTS);
+
+            if (parsed.length < MIN_PARTICIPANTS) {
+              showToast(`최소 ${MIN_PARTICIPANTS}명 이상의 이름을 입력해주세요.`);
+              return;
+            }
+            setEditMembers(parsed);
+            setIsBulkEditMode(false);
+            showToast(`${parsed.length}명의 참여자 목록이 반영되었습니다.`);
+          }
+        };
+
+        const handleSaveGroupChanges = (applyToGame = false) => {
+          if (!editingGroup) return;
+
+          let finalMembers = isBulkEditMode
+            ? bulkEditText
+                .split(/[\n,]+/)
+                .map((m) => m.trim())
+                .filter(Boolean)
+            : editMembers.map((m) => m.trim()).filter(Boolean);
+
+          if (finalMembers.length < MIN_PARTICIPANTS) {
+            showToast(`참여자는 최소 ${MIN_PARTICIPANTS}명 이상이어야 합니다.`);
+            return;
+          }
+
+          if (finalMembers.length > MAX_PARTICIPANTS) {
+            finalMembers = finalMembers.slice(0, MAX_PARTICIPANTS);
+          }
+
+          const finalName = editName.trim() || `그룹 (${finalMembers.length}명)`;
+
+          let updatedList;
+          let targetGroup;
+
+          if (editingGroup.id.startsWith('new-')) {
+            updatedList = saveNewGroup(finalName, finalMembers);
+            targetGroup = updatedList[0];
+          } else {
+            updatedList = updateSavedGroup(editingGroup.id, finalName, finalMembers);
+            targetGroup = {
+              ...editingGroup,
+              name: finalName,
+              members: finalMembers,
+            };
+          }
+
+          setSavedGroups(updatedList);
+          setEditingGroup(null);
+
+          if (applyToGame) {
+            handleLoadGroup(targetGroup);
+            showToast(`✨ '${finalName}' (${finalMembers.length}명) 저장 및 게임에 적용 완료!`);
+          } else {
+            showToast(`💾 '${finalName}' (${finalMembers.length}명) 그룹이 수정되었습니다.`);
+          }
+        };
+
+        const handleParticipantNameChange = (index, newName) => {
+          const updated = [...participants];
+          updated[index] = {
+            ...updated[index],
+            name: newName,
+            avatarChar: newName.trim().charAt(0) || `${index + 1}`,
+          };
+          onUpdateParticipants(updated);
+        };
+
+        const handlePrizeNameChange = (index, newName) => {
+          const updated = [...prizes];
+          updated[index] = {
+            ...updated[index],
+            name: newName,
+          };
+          onUpdatePrizes(updated);
+        };
+
+        const handleToggleSpecialPrize = (index) => {
+          const updated = [...prizes];
+          updated[index] = {
+            ...updated[index],
+            isSpecial: !updated[index].isSpecial,
+          };
+          onUpdatePrizes(updated);
+        };
+
+        const handleSetCount = (newCount) => {
+          if (newCount < MIN_PARTICIPANTS || newCount > MAX_PARTICIPANTS) return;
+
+          let newParticipants = [...participants];
+          let newPrizes = [...prizes];
+
+          if (newCount > participants.length) {
+            for (let i = participants.length; i < newCount; i++) {
+              const pal = getPaletteForIndex(i);
+              const defaultName = DEFAULT_NAMES[i] || `참여자 ${i + 1}`;
+              newParticipants.push({
+                id: `p-${i + 1}`,
+                name: defaultName,
+                color: pal.color,
+                bgLight: pal.bgLight,
+                border: pal.border,
+                textColor: pal.text,
+                avatarChar: defaultName.charAt(0),
+              });
+              newPrizes.push({
+                id: `prize-${i + 1}`,
+                name: `경품 ${i + 1}`,
+                isSpecial: false,
+              });
+            }
+          } else if (newCount < participants.length) {
+            newParticipants = newParticipants.slice(0, newCount);
+            newPrizes = newPrizes.slice(0, newCount);
+          }
+
+          onUpdateParticipants(newParticipants);
+          onUpdatePrizes(newPrizes);
+        };
+
+        const handleApplyPreset = (presetIndex) => {
+          const preset = PRESET_THEMES[presetIndex];
+          if (!preset) return;
+
+          const newPrizes = participants.map((_, i) => {
+            const template = preset.prizes[i % preset.prizes.length];
+            return {
+              id: `prize-${i + 1}`,
+              name: template.name,
+              isSpecial: template.isSpecial,
+            };
+          });
+          onUpdatePrizes(newPrizes);
+          showToast(`🎁 '${preset.name}' 경품 프리셋이 적용되었습니다.`);
+        };
+
+        const handleShufflePrizes = () => {
+          const shuffled = [...prizes];
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+          }
+          onUpdatePrizes(shuffled);
+          showToast('🔀 경품 순서가 무작위로 섞였습니다.');
+        };
+
+        const handleResetNames = () => {
+          const updated = participants.map((p, i) => {
+            const defaultName = DEFAULT_NAMES[i] || `참여자 ${i + 1}`;
+            return {
+              ...p,
+              name: defaultName,
+              avatarChar: defaultName.charAt(0),
+            };
+          });
+          onUpdateParticipants(updated);
+          showToast('기본 참여자 이름으로 초기화되었습니다.');
+        };
+
+        const specialPrizesCount = prizes.filter((p) => p.isSpecial).length;
+
+        return (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+            {/* Hero Intro */}
+            <div className="text-center max-w-3xl mx-auto mb-10">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-200 text-xs font-semibold mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <span>공정하고 재미있는 실시간 사다리 경품 추첨 (최대 20명 지원)</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                윤관의 랜덤 사다리~~ 게임
+              </h1>
+              <p className="mt-2.5 text-slate-600 text-base leading-relaxed text-balance">
+                최소 {MIN_PARTICIPANTS}명부터 <strong>최대 {MAX_PARTICIPANTS}명</strong>까지 참여자와 경품을 매핑합니다. 특별 경품에 당첨되면 해당 참여자의 이름이 거대한 축하 풍선으로 떠오릅니다!
+              </p>
+
+              {/* Count Adjustment Bar */}
+              <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 p-1.5 sm:p-2 bg-white border border-slate-200 rounded-2xl shadow-xs">
+                <span className="text-xs font-semibold text-slate-500 pl-2">참여자 인원수</span>
+                <div className="flex items-center flex-wrap gap-1">
+                  {QUICK_COUNT_OPTIONS.map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => handleSetCount(num)}
+                      className={`px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+                        count === num
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      }`}
+                    >
+                      {num}명
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center border-l border-slate-200 pl-2 pr-1 gap-1">
+                  <button
+                    onClick={() => handleSetCount(count - 1)}
+                    disabled={count <= MIN_PARTICIPANTS}
+                    aria-label="1명 감소"
+                    className="p-1 rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-sm font-extrabold text-slate-900 w-8 text-center tabular-nums">
+                    {count}명
+                  </span>
+                  <button
+                    onClick={() => handleSetCount(count + 1)}
+                    disabled={count >= MAX_PARTICIPANTS}
+                    aria-label="1명 추가"
+                    className="p-1 rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating Toast Notification */}
+            {toast && (
+              <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-slate-900 text-white shadow-2xl border border-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-200">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>{toast}</span>
+              </div>
+            )}
+
+            {/* PARTICIPANT GROUPS BAR */}
+            <div className="mb-6 p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl shadow-xs">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Users className="w-4 h-4 text-indigo-600" />
+                  <h2 className="text-sm font-bold text-slate-900">자주 사용하는 참여자 그룹</h2>
+                  <span className="text-xs text-slate-500">
+                    그룹을 클릭하면 게임에 바로 불러오고, <strong>수정 버튼</strong>으로 인원수를 늘리거나 줄일 수 있습니다
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  <button
+                    onClick={() => {
+                      setNewGroupName(`우리 모임 (${participants.length}명)`);
+                      setGroupModalMode('SAVE');
+                    }}
+                    className="text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 active:scale-95"
+                  >
+                    <BookmarkPlus className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>현재 명단 그룹으로 저장</span>
+                  </button>
+
+                  <button
+                    onClick={handleOpenCreateNewGroup}
+                    className="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>새 그룹 생성</span>
+                  </button>
+
+                  <button
+                    onClick={() => setGroupModalMode('MANAGE')}
+                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 active:scale-95"
+                  >
+                    <Settings2 className="w-3.5 h-3.5 text-slate-500" />
+                    <span>그룹 관리</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Saved Groups Quick Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {savedGroups.map((group) => (
+                  <div
+                    key={group.id}
+                    className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-indigo-50/30 hover:border-indigo-300 transition-all flex flex-col justify-between group shadow-2xs"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 truncate">
+                          {group.name}
+                        </span>
+                        <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200 shrink-0 ml-1.5">
+                          {group.members.length}명
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 line-clamp-1 mb-3">
+                        {group.members.slice(0, 5).join(', ')}
+                        {group.members.length > 5 ? ` 외 ${group.members.length - 5}명` : ''}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/80">
+                      <button
+                        type="button"
+                        onClick={() => handleLoadGroup(group)}
+                        className="flex-1 py-1.5 px-2 text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-600 hover:text-white border border-indigo-200 rounded-xl transition-all active:scale-98 text-center shadow-2xs"
+                      >
+                        게임에 불러오기
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditGroup(group)}
+                        title="참여자 수 늘리기/줄이기 및 이름 수정"
+                        className="py-1.5 px-2.5 text-xs font-semibold text-slate-700 hover:text-indigo-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all flex items-center gap-1 active:scale-98"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>수정</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Presets Bar */}
+            <div className="mb-8 p-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <Gift className="w-4 h-4 text-rose-500" />
+                  <h2 className="text-sm font-bold text-slate-900">추천 경품 프리셋</h2>
+                  <span className="text-xs text-slate-500">클릭 한 번으로 최대 20개의 경품명을 자동 입력합니다</span>
+                </div>
+                <button
+                  onClick={handleShufflePrizes}
+                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  <Shuffle className="w-3.5 h-3.5 text-slate-500" />
+                  <span>경품 순서 섞기</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {PRESET_THEMES.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleApplyPreset(idx)}
+                    className="px-3 py-2.5 text-left rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50/50 transition-all text-xs font-semibold text-slate-800 flex items-center justify-between group active:scale-98"
+                  >
+                    <span className="truncate">{preset.name}</span>
+                    <span className="text-slate-400 group-hover:text-amber-600 font-bold ml-1">적용</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Main 2-Column Split: Participants (Left) vs Prizes (Right) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mb-10">
+              {/* Column 1: Participants List */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs">
+                <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-indigo-600" />
+                    <div>
+                      <h2 className="text-base font-bold text-slate-900">
+                        게임 참여자 ({count}명)
+                      </h2>
+                      <p className="text-xs text-slate-500">참여자 이름을 직접 수정할 수 있습니다 (최대 20명)</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        setNewGroupName(`우리 모임 (${participants.length}명)`);
+                        setGroupModalMode('SAVE');
+                      }}
+                      title="현재 참여자 명단을 새 그룹으로 저장"
+                      className="text-xs font-medium text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors border border-indigo-200/60"
+                    >
+                      <BookmarkPlus className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>그룹 저장</span>
+                    </button>
+                    <button
+                      onClick={handleResetNames}
+                      className="text-xs font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>기본 이름</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 max-h-[640px] overflow-y-auto pr-1">
+                  {participants.map((participant, index) => (
+                    <div
+                      key={participant.id}
+                      className="flex items-center gap-3 p-2 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/60 transition-colors"
+                    >
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs"
+                        style={{ backgroundColor: participant.color }}
+                      >
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={participant.name}
+                          onChange={(e) => handleParticipantNameChange(index, e.target.value)}
+                          placeholder={`참여자 ${index + 1}`}
+                          maxLength={14}
+                          className="w-full bg-white border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none transition-all"
+                        />
+                      </div>
+                      <div className="text-xs text-slate-400 font-mono tabular-nums shrink-0 pr-2">
+                        #{index + 1} 라인
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Quick Add/Remove Participant */}
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <span>참여자 수: {count}명 (최대 {MAX_PARTICIPANTS}명)</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleSetCount(count - 1)}
+                      disabled={count <= MIN_PARTICIPANTS}
+                      className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold disabled:opacity-40"
+                    >
+                      - 1명 빼기
+                    </button>
+                    <button
+                      onClick={() => handleSetCount(count + 1)}
+                      disabled={count >= MAX_PARTICIPANTS}
+                      className="px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold disabled:opacity-40"
+                    >
+                      + 1명 추가
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 2: Prizes List */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs">
+                <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-amber-500" />
+                    <div>
+                      <h2 className="text-base font-bold text-slate-900">
+                        경품 명단 ({count}개)
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        <span className="text-amber-600 font-semibold">🎈 특별 지정</span> 버튼을 누르면 당첨 시 대형 풍선 축하가 뜹니다
+                      </p>
+                    </div>
+                  </div>
+                  {specialPrizesCount > 0 && (
+                    <div className="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200">
+                      특별 경품 {specialPrizesCount}개
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2.5 max-h-[640px] overflow-y-auto pr-1">
+                  {prizes.map((prize, index) => (
+                    <div
+                      key={prize.id}
+                      className={`flex items-center gap-2.5 p-2 rounded-xl border transition-all ${
+                        prize.isSpecial
+                          ? 'border-amber-300 bg-amber-50/50 shadow-xs'
+                          : 'border-slate-100 hover:border-slate-200 bg-slate-50/60'
+                      }`}
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                          prize.isSpecial
+                            ? 'bg-amber-400 text-amber-950 font-black shadow-xs'
+                            : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={prize.name}
+                          onChange={(e) => handlePrizeNameChange(index, e.target.value)}
+                          placeholder={`경품 ${index + 1}`}
+                          maxLength={28}
+                          className="w-full bg-white border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none transition-all"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSpecialPrize(index)}
+                        title={prize.isSpecial ? '특별 경품 지정 해제' : '특별 경품으로 지정 (당첨 시 대형 풍선 연출)'}
+                        className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1 shrink-0 ${
+                          prize.isSpecial
+                            ? 'bg-amber-500 text-white shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-500 hover:text-amber-700 hover:border-amber-300'
+                        }`}
+                      >
+                        <span>🎈</span>
+                        <span className="hidden sm:inline">
+                          {prize.isSpecial ? '특별 경품' : '지정하기'}
+                        </span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Balloon Special Explanation Callout */}
+                <div className="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2.5">
+                  <span className="text-base leading-none">🎈</span>
+                  <p className="leading-relaxed">
+                    <strong>특별 경품 혜택:</strong> 🎈로 지정된 경품에 당첨되는 참여자가 나오면, 그 참여자의 이름이 화면 전체에 <strong>거대한 3D 축하 풍선</strong>으로 떠오르며 화려한 폭죽과 음악이 함께 울려 퍼집니다!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Floating Start CTA */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-slate-900 text-white rounded-2xl shadow-xl">
+              <div>
+                <h3 className="text-lg font-bold">모든 준비가 완료되었습니다!</h3>
+                <p className="text-slate-300 text-xs sm:text-sm mt-0.5">
+                  참여자 {count}명과 경품 {count}개의 사다리타기를 진행합니다.
+                </p>
+              </div>
+              <button
+                onClick={onStartGame}
+                className="w-full sm:w-auto px-8 py-3.5 text-base font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl transition-all shadow-md shadow-amber-400/20 active:scale-95 flex items-center justify-center gap-2 shrink-0"
+              >
+                <span>사다리타기 시작하기</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+
+            {/* MODAL 1: SAVE CURRENT BOARD AS NEW GROUP */}
+            {groupModalMode === 'SAVE' && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200">
+                  <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                        <BookmarkPlus className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900">현재 명단 그룹으로 저장</h3>
+                        <p className="text-xs text-slate-500">현재 {participants.length}명의 참여자 명단을 그룹으로 기억합니다</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setGroupModalMode('NONE')}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveGroupSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        그룹 이름
+                      </label>
+                      <input
+                        type="text"
+                        autoFocus
+                        value={newGroupName}
+                        onChange={(e) => setNewGroupName(e.target.value)}
+                        placeholder="예: 개발 1팀, 동호회 멤버, 워크샵 스쿼드"
+                        maxLength={24}
+                        className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="block text-xs font-bold text-slate-600 mb-2">
+                        포함될 참여자 ({participants.length}명)
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                        {participants.map((p) => (
+                          <span
+                            key={p.id}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-800 shadow-2xs"
+                          >
+                            <span
+                              className="w-2 h-2 rounded-full inline-block"
+                              style={{ backgroundColor: p.color }}
+                            />
+                            <span>{p.name}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setGroupModalMode('NONE')}
+                        className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs active:scale-95 flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>그룹 저장하기</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL 2: MANAGE SAVED PARTICIPANT GROUPS */}
+            {groupModalMode === 'MANAGE' && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="bg-white rounded-3xl p-6 max-w-xl w-full shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
+                  <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
+                        <Settings2 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900">참여자 그룹 관리</h3>
+                        <p className="text-xs text-slate-500">저장된 그룹의 참여자 수를 늘리거나 줄이고, 이름을 수정합니다</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleOpenCreateNewGroup}
+                        className="text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-xl border border-indigo-200 flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>새 그룹 추가</span>
+                      </button>
+                      <button
+                        onClick={() => setGroupModalMode('NONE')}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 overflow-y-auto flex-1 pr-1">
+                    {savedGroups.length === 0 ? (
+                      <div className="py-12 text-center text-slate-400 text-xs">
+                        저장된 참여자 그룹이 없습니다.
+                      </div>
+                    ) : (
+                      savedGroups.map((group) => (
+                        <div
+                          key={group.id}
+                          className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-sm text-slate-900">{group.name}</span>
+                              <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                {group.members.length}명
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleOpenEditGroup(group)}
+                                title="참여자 수 증감 및 이름 수정"
+                                className="px-2.5 py-1.5 text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-all active:scale-95 shadow-2xs flex items-center gap-1"
+                              >
+                                <Edit3 className="w-3 h-3 text-indigo-600" />
+                                <span>인원/수정</span>
+                              </button>
+                              <button
+                                onClick={() => handleLoadGroup(group)}
+                                className="px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-all active:scale-95 shadow-2xs"
+                              >
+                                불러오기
+                              </button>
+                              <button
+                                onClick={() => handleDeleteGroup(group.id, group.name)}
+                                title="그룹 삭제"
+                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="text-xs text-slate-600 leading-relaxed bg-white p-2.5 rounded-xl border border-slate-100 line-clamp-2">
+                            {group.members.join(', ')}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleResetToDefaultGroups}
+                      className="text-xs font-medium text-slate-500 hover:text-slate-800 underline underline-offset-2"
+                    >
+                      기본 추천 그룹으로 초기화
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setGroupModalMode('NONE')}
+                      className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                    >
+                      닫기
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL 3: EDIT PARTICIPANT GROUP */}
+            {editingGroup && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-xl w-full shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+                  <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100 shrink-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                        <Edit3 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-extrabold text-slate-900">
+                          참여자 그룹 수정
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          인원수를 늘리거나 줄이고, 참여자 이름을 직접 수정합니다 (최대 20명)
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setEditingGroup(null)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4 overflow-y-auto flex-1 pr-1">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        그룹 이름
+                      </label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="그룹 이름 입력"
+                        maxLength={28}
+                        className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 rounded-xl px-3.5 py-2 text-sm font-semibold text-slate-900 outline-none transition-all"
+                      />
+                    </div>
+
+                    <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-indigo-950">참여자 인원수:</span>
+                        <span className="px-2.5 py-0.5 rounded-md bg-indigo-600 text-white font-black text-xs">
+                          {editMembers.length}명
+                        </span>
+                        <span className="text-[11px] text-indigo-600 font-medium">
+                          (최소 {MIN_PARTICIPANTS}명 ~ 최대 {MAX_PARTICIPANTS}명)
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={handleRemoveOneMemberFromEdit}
+                          disabled={editMembers.length <= MIN_PARTICIPANTS}
+                          className="px-2.5 py-1 text-xs font-bold text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 rounded-lg transition-all flex items-center gap-1 disabled:opacity-40"
+                        >
+                          <UserMinus className="w-3.5 h-3.5" />
+                          <span>- 1명 빼기</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleAddOneMemberToEdit}
+                          disabled={editMembers.length >= MAX_PARTICIPANTS}
+                          className="px-2.5 py-1 text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all flex items-center gap-1 disabled:opacity-40"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>+ 1명 추가</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleToggleBulkMode}
+                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 border ${
+                            isBulkEditMode
+                              ? 'bg-indigo-600 text-white border-indigo-600'
+                              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                          }`}
+                        >
+                          {isBulkEditMode ? <List className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
+                          <span>{isBulkEditMode ? '목록 모드' : '일괄 붙여넣기'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {!isBulkEditMode && (
+                      <form onSubmit={handleAddCustomMemberToEdit} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={addMemberInput}
+                          onChange={(e) => setAddMemberInput(e.target.value)}
+                          placeholder="새 참여자 이름 추가 (예: 홍길동)"
+                          maxLength={14}
+                          disabled={editMembers.length >= MAX_PARTICIPANTS}
+                          className="flex-1 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-900 outline-none transition-all disabled:opacity-50"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!addMemberInput.trim() || editMembers.length >= MAX_PARTICIPANTS}
+                          className="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 rounded-xl transition-all shadow-2xs flex items-center gap-1 shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>추가</span>
+                        </button>
+                      </form>
+                    )}
+
+                    {!isBulkEditMode ? (
+                      <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                        {editMembers.map((member, idx) => {
+                          const pal = getPaletteForIndex(idx);
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-2.5 p-1.5 px-2 bg-slate-50 border border-slate-200 rounded-xl hover:border-slate-300 transition-colors"
+                            >
+                              <div
+                                className="w-7 h-7 rounded-lg text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs"
+                                style={{ backgroundColor: pal.color }}
+                              >
+                                {idx + 1}
+                              </div>
+                              <input
+                                type="text"
+                                value={member}
+                                onChange={(e) => handleEditMemberName(idx, e.target.value)}
+                                placeholder={`참여자 ${idx + 1}`}
+                                maxLength={14}
+                                className="flex-1 bg-white border border-slate-200 focus:border-indigo-500 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-900 outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMemberFromEdit(idx)}
+                                disabled={editMembers.length <= MIN_PARTICIPANTS}
+                                title="이 참여자 삭제"
+                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none shrink-0"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="text-xs text-slate-500">
+                          줄바꿈(Enter) 또는 쉼표(,)로 구분하여 이름을 입력하세요 (최대 20명):
+                        </div>
+                        <textarea
+                          rows={8}
+                          value={bulkEditText}
+                          onChange={(e) => setBulkEditText(e.target.value)}
+                          placeholder={'김민수\n이지은\n박서준\n정지우...'}
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 rounded-xl p-3 text-xs font-semibold text-slate-900 outline-none transition-all font-mono"
+                        />
+                        <div className="text-[11px] text-slate-400 flex justify-between">
+                          <span>입력된 줄 수: {bulkEditText.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean).length}개</span>
+                          <span>상한: 최대 {MAX_PARTICIPANTS}명</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-4 mt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setEditingGroup(null)}
+                      className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                    >
+                      취소
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSaveGroupChanges(false)}
+                        className="px-4 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all shadow-2xs"
+                      >
+                        저장만 하기
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveGroupChanges(true)}
+                        className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>저장 후 바로 게임에 적용</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      // =========================================================================
+      // components/LadderBoard.tsx
+      // =========================================================================
+      const LadderBoard = ({
+        participants,
+        prizes,
+        rungs,
+        results,
+        onReshuffleRungs,
+        onRevealSpecialWinner,
+        onViewSummary,
+      }) => {
+        const numCols = participants.length;
+        const [completedIds, setCompletedIds] = useState(new Set());
+        const [activeParticipantId, setActiveParticipantId] = useState(null);
+        const [activePoint, setActivePoint] = useState(null);
+        const [isBlind, setIsBlind] = useState(false);
+        const [speed, setSpeed] = useState(1.5);
+        const [revealedAll, setRevealedAll] = useState(false);
+        const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+        const [isSavingImage, setIsSavingImage] = useState(false);
+        const [imageSavedSuccess, setImageSavedSuccess] = useState(false);
+
+        const triggeredSpecialsRef = useRef(new Set());
+        const animationCancelRef = useRef(null);
+        const isAutoPlayingRef = useRef(false);
+        const completedIdsRef = useRef(new Set());
+
+        useEffect(() => {
+          completedIdsRef.current = completedIds;
+        }, [completedIds]);
+
+        useEffect(() => {
+          return () => {
+            isAutoPlayingRef.current = false;
+            if (animationCancelRef.current) {
+              animationCancelRef.current();
+            }
+          };
+        }, []);
+
+        const startTrace = useCallback(
+          (participantId, onComplete) => {
+            const result = results.find((r) => r.participantId === participantId);
+            if (!result) return;
+
+            if (animationCancelRef.current) {
+              animationCancelRef.current();
+              animationCancelRef.current = null;
+            }
+
+            setActiveParticipantId(participantId);
+            const path = result.path;
+            if (path.length < 2) return;
+
+            let totalDist = 0;
+            const segmentDists = [];
+            for (let i = 0; i < path.length - 1; i++) {
+              const dx = Math.abs(path[i + 1].x - path[i].x);
+              const dy = Math.abs(path[i + 1].y - path[i].y);
+              const dist = dx + dy;
+              segmentDists.push(dist);
+              totalDist += dist;
+            }
+
+            const duration = (2000 / speed) * Math.min(1.3, Math.max(0.65, totalDist));
+            let startTime = null;
+            let cancelled = false;
+            let lastSegmentIndex = -1;
+
+            animationCancelRef.current = () => {
+              cancelled = true;
+            };
+
+            const targetResult = result;
+
+            function step(timestamp) {
+              if (cancelled) return;
+              if (!startTime) startTime = timestamp;
+              const elapsed = timestamp - startTime;
+              const progress = Math.min(1, elapsed / duration);
+
+              const currentTargetDist = progress * totalDist;
+              let accumulated = 0;
+              let currentSeg = 0;
+
+              while (currentSeg < segmentDists.length && accumulated + segmentDists[currentSeg] < currentTargetDist) {
+                accumulated += segmentDists[currentSeg];
+                currentSeg++;
+              }
+
+              if (currentSeg !== lastSegmentIndex) {
+                lastSegmentIndex = currentSeg;
+                if (currentSeg > 0 && path[currentSeg]) {
+                  const prev = path[currentSeg - 1];
+                  const curr = path[currentSeg];
+                  if (prev.x !== curr.x) {
+                    soundManager.playTurn();
+                  } else {
+                    soundManager.playStep();
+                  }
+                }
+              }
+
+              if (currentSeg < segmentDists.length) {
+                const segProgress = (currentTargetDist - accumulated) / segmentDists[currentSeg];
+                const p1 = path[currentSeg];
+                const p2 = path[currentSeg + 1];
+                const interpX = p1.x + (p2.x - p1.x) * segProgress;
+                const interpY = p1.y + (p2.y - p1.y) * segProgress;
+                setActivePoint({ x: interpX, y: interpY });
+              } else {
+                const last = path[path.length - 1];
+                setActivePoint(last);
+              }
+
+              if (progress < 1) {
+                requestAnimationFrame(step);
+              } else {
+                setActivePoint(null);
+                setActiveParticipantId(null);
+                setCompletedIds((prev) => {
+                  const nextSet = new Set([...prev, participantId]);
+                  completedIdsRef.current = nextSet;
+                  return nextSet;
+                });
+                soundManager.playArrival();
+
+                const isSpecial = targetResult.isSpecial && !triggeredSpecialsRef.current.has(participantId);
+                if (isSpecial) {
+                  triggeredSpecialsRef.current.add(participantId);
+                  setTimeout(() => {
+                    onRevealSpecialWinner(targetResult);
+                  }, 350);
+                }
+
+                if (onComplete) {
+                  const pauseTime = isSpecial ? 2200 : 500;
+                  setTimeout(() => {
+                    if (isAutoPlayingRef.current) {
+                      onComplete();
+                    }
+                  }, pauseTime);
+                }
+              }
+            }
+
+            requestAnimationFrame(step);
+          },
+          [results, speed, onRevealSpecialWinner]
+        );
+
+        const runNextAutoStep = useCallback(() => {
+          if (!isAutoPlayingRef.current) return;
+
+          const next = participants.find((p) => !completedIdsRef.current.has(p.id));
+          if (next) {
+            startTrace(next.id, () => {
+              runNextAutoStep();
+            });
+          } else {
+            isAutoPlayingRef.current = false;
+            setIsAutoPlaying(false);
+            setRevealedAll(true);
+          }
+        }, [participants, startTrace]);
+
+        const handleToggleAutoSequence = () => {
+          if (isAutoPlaying) {
+            isAutoPlayingRef.current = false;
+            setIsAutoPlaying(false);
+            if (animationCancelRef.current) {
+              animationCancelRef.current();
+              animationCancelRef.current = null;
+            }
+            setActiveParticipantId(null);
+            setActivePoint(null);
+          } else {
+            isAutoPlayingRef.current = true;
+            setIsAutoPlaying(true);
+            runNextAutoStep();
+          }
+        };
+
+        const handleTraceNext = () => {
+          if (isAutoPlaying) {
+            isAutoPlayingRef.current = false;
+            setIsAutoPlaying(false);
+          }
+          const next = participants.find((p) => !completedIds.has(p.id));
+          if (next) {
+            startTrace(next.id);
+          }
+        };
+
+        const handleSkipToInstant = () => {
+          isAutoPlayingRef.current = false;
+          setIsAutoPlaying(false);
+          if (animationCancelRef.current) {
+            animationCancelRef.current();
+            animationCancelRef.current = null;
+          }
+          setActiveParticipantId(null);
+          setActivePoint(null);
+          setRevealedAll(true);
+          const allIds = new Set(participants.map((p) => p.id));
+          setCompletedIds(allIds);
+          completedIdsRef.current = allIds;
+
+          const specialResult = results.find((r) => r.isSpecial && !triggeredSpecialsRef.current.has(r.participantId));
+          if (specialResult) {
+            triggeredSpecialsRef.current.add(specialResult.participantId);
+            setTimeout(() => {
+              onRevealSpecialWinner(specialResult);
+            }, 300);
+          }
+        };
+
+        const handleReset = () => {
+          isAutoPlayingRef.current = false;
+          setIsAutoPlaying(false);
+          if (animationCancelRef.current) {
+            animationCancelRef.current();
+            animationCancelRef.current = null;
+          }
+          setActiveParticipantId(null);
+          setActivePoint(null);
+          setCompletedIds(new Set());
+          completedIdsRef.current = new Set();
+          setRevealedAll(false);
+          triggeredSpecialsRef.current.clear();
+          onReshuffleRungs();
+        };
+
+        const handleExportJpg = async () => {
+          if (isSavingImage) return;
+          setIsSavingImage(true);
+          setImageSavedSuccess(false);
+
+          const success = await exportResultsToJpg(results, '윤관의 랜덤 사다리~~ 게임 최종 결과');
+          setIsSavingImage(false);
+          if (success) {
+            setImageSavedSuccess(true);
+            setTimeout(() => setImageSavedSuccess(false), 3000);
+          }
+        };
+
+        const completedResults = results.filter((r) => completedIds.has(r.participantId));
+        const allCompleted = completedIds.size === participants.length;
+        const currentRunningParticipant = participants.find((p) => p.id === activeParticipantId);
+
+        return (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 select-none">
+            {/* Control Action Strip */}
+            <div className="mb-4 p-3.5 bg-white border border-slate-200 rounded-2xl shadow-xs flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center flex-wrap gap-2">
+                <button
+                  onClick={handleToggleAutoSequence}
+                  disabled={allCompleted && !isAutoPlaying}
+                  className={`px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 active:scale-95 ${
+                    isAutoPlaying
+                      ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
+                      : 'bg-slate-900 hover:bg-slate-800 text-white disabled:opacity-40 disabled:pointer-events-none'
+                  }`}
+                >
+                  {isAutoPlaying ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-white animate-ping mr-0.5" />
+                      <span>순차 추첨 일시 정지</span>
+                    </>
+                  ) : (
+                    <>
+                      <FastForward className="w-3.5 h-3.5 fill-white text-white" />
+                      <span>전체 결과 순차 추첨</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleTraceNext}
+                  disabled={allCompleted || isAutoPlaying || activeParticipantId !== null}
+                  className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 rounded-xl transition-all flex items-center gap-1.5 active:scale-95"
+                >
+                  <Play className="w-3.5 h-3.5 text-slate-700" />
+                  <span>다음 1명 추첨</span>
+                </button>
+
+                {(isAutoPlaying || (activeParticipantId && !allCompleted)) && (
+                  <button
+                    onClick={handleSkipToInstant}
+                    className="px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-xl transition-all flex items-center gap-1 active:scale-95"
+                  >
+                    <span>즉시 전체 완료 (스킵)</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsBlind(!isBlind)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all flex items-center gap-1.5 ${
+                    isBlind
+                      ? 'bg-purple-100 border-purple-300 text-purple-900 font-bold'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {isBlind ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  <span>{isBlind ? '블라인드 ON' : '블라인드 OFF'}</span>
+                </button>
+
+                <div className="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200 text-xs">
+                  {[1, 1.5, 2].map((spd) => (
+                    <button
+                      key={spd}
+                      onClick={() => setSpeed(spd)}
+                      className={`px-2 py-1 rounded-lg font-bold transition-all ${
+                        speed === spd
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      {spd}x
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleReset}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>다시 섞기</span>
+                </button>
+
+                {allCompleted && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={handleExportJpg}
+                      disabled={isSavingImage}
+                      className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all flex items-center gap-1.5 shadow-xs active:scale-95 disabled:opacity-50"
+                    >
+                      {imageSavedSuccess ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+                          <span>JPG 저장 완료!</span>
+                        </>
+                      ) : isSavingImage ? (
+                        <>
+                          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>저장 중...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-3.5 h-3.5 text-white" />
+                          <span>결과 JPG 저장</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={onViewSummary}
+                      className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-amber-400 text-slate-900 hover:bg-amber-300 transition-all flex items-center gap-1.5 shadow-xs animate-bounce active:scale-95"
+                    >
+                      <Trophy className="w-3.5 h-3.5" />
+                      <span>결과표 보기</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {isAutoPlaying && currentRunningParticipant && (
+              <div className="mb-4 p-2.5 px-4 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-indigo-500/10 border border-amber-300/80 rounded-2xl flex items-center justify-between text-xs animate-pulse">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎬</span>
+                  <span className="font-bold text-slate-900">
+                    순차 추첨 진행 중: [{currentRunningParticipant.name}] 님의 사다리를 타고 내려가는 중입니다...
+                  </span>
+                </div>
+                <div className="text-slate-600 font-mono font-bold">
+                  {completedIds.size + 1} / {participants.length}
+                </div>
+              </div>
+            )}
+
+            {numCols >= 10 && (
+              <div className="mb-2 text-right text-[11px] text-slate-400 font-medium">
+                ↔ 좌우로 스크롤하여 {numCols}명의 사다리를 모두 확인할 수 있습니다
+              </div>
+            )}
+
+            {/* THE LADDER BOARD CONTAINER */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-sm overflow-x-auto">
+              <div style={{ minWidth: `${Math.max(760, numCols * 80)}px` }} className="relative mx-auto">
+                {/* Top Row: Participants */}
+                <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: `repeat(${numCols}, minmax(0, 1fr))` }}>
+                  {participants.map((p, idx) => {
+                    const isCompleted = completedIds.has(p.id);
+                    const isActive = activeParticipantId === p.id;
+                    const result = results.find((r) => r.participantId === p.id);
+
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => !isActive && startTrace(p.id)}
+                        title={`${p.name} 사다리 타기`}
+                        className={`group relative flex flex-col items-center p-2 rounded-2xl border text-center transition-all cursor-pointer ${
+                          isActive
+                            ? 'ring-2 ring-indigo-500 scale-105 shadow-md bg-indigo-50/60 border-indigo-300'
+                            : isCompleted
+                            ? 'bg-slate-50 border-slate-200 opacity-90'
+                            : 'hover:border-slate-400 hover:shadow-xs bg-white border-slate-200'
+                        }`}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white shadow-xs mb-1.5 transition-transform group-hover:scale-110"
+                          style={{ backgroundColor: p.color }}
+                        >
+                          {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
+                        </div>
+
+                        <span className="text-xs font-bold text-slate-900 truncate w-full px-1">
+                          {p.name}
+                        </span>
+
+                        {isCompleted && result && (
+                          <span className="text-[10px] text-slate-500 truncate w-full mt-0.5 font-medium">
+                            → {result.prizeName}
+                          </span>
+                        )}
+
+                        {!isCompleted && !isActive && (
+                          <span className="text-[10px] text-indigo-600 font-semibold mt-0.5 group-hover:underline">
+                            클릭 추첨
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* SVG LADDER CANVAS */}
+                <div className="relative w-full h-[460px] my-1 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/80 rounded-2xl border border-slate-200/90 overflow-hidden shadow-inner">
+                  {isBlind && !revealedAll && (
+                    <div className="absolute inset-0 z-10 pointer-events-none bg-slate-900/10 backdrop-blur-md flex items-center justify-center">
+                      <div className="px-5 py-2.5 rounded-2xl bg-white/95 border border-slate-200 shadow-xl text-center">
+                        <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5 justify-center">
+                          <EyeOff className="w-4 h-4 text-purple-600" />
+                          <span>미스터리 블라인드 모드 작동 중</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          사다리 경로가 가려져 있습니다. 참여자를 클릭하여 결과를 확인하세요!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <svg className="w-full h-full" preserveAspectRatio="none">
+                    <defs>
+                      <filter id="activeGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                      </filter>
+                    </defs>
+
+                    {Array.from({ length: numCols }).map((_, col) => {
+                      const xPercent = ((col + 0.5) / numCols) * 100;
+                      return (
+                        <line
+                          key={`v-col-${col}`}
+                          x1={`${xPercent}%`}
+                          y1="0%"
+                          x2={`${xPercent}%`}
+                          y2="100%"
+                          stroke="#CBD5E1"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                        />
+                      );
+                    })}
+
+                    {rungs.map((rung) => {
+                      const x1Percent = ((rung.leftCol + 0.5) / numCols) * 100;
+                      const x2Percent = ((rung.rightCol + 0.5) / numCols) * 100;
+                      const yPercent = rung.yFraction * 100;
+
+                      return (
+                        <line
+                          key={rung.id}
+                          x1={`${x1Percent}%`}
+                          y1={`${yPercent}%`}
+                          x2={`${x2Percent}%`}
+                          y2={`${yPercent}%`}
+                          stroke="#94A3B8"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                        />
+                      );
+                    })}
+
+                    {completedResults.map((res) => {
+                      const pathStr = res.path
+                        .map((pt, i) => {
+                          const xPercent = ((pt.x + 0.5) / numCols) * 100;
+                          const yPercent = pt.y * 100;
+                          return `${i === 0 ? 'M' : 'L'} ${xPercent}% ${yPercent}%`;
+                        })
+                        .join(' ');
+
+                      return (
+                        <path
+                          key={`path-${res.participantId}`}
+                          d={pathStr}
+                          fill="none"
+                          stroke={res.participantColor}
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeOpacity="0.8"
+                        />
+                      );
+                    })}
+
+                    {activeParticipantId &&
+                      (() => {
+                        const activeRes = results.find((r) => r.participantId === activeParticipantId);
+                        if (!activeRes) return null;
+
+                        const fullPath = activeRes.path;
+                        const pts = [];
+                        if (activePoint) {
+                          for (let i = 0; i < fullPath.length; i++) {
+                            const p = fullPath[i];
+                            const next = fullPath[i + 1];
+                            pts.push(p);
+
+                            if (next) {
+                              const minX = Math.min(p.x, next.x);
+                              const maxX = Math.max(p.x, next.x);
+                              const minY = Math.min(p.y, next.y);
+                              const maxY = Math.max(p.y, next.y);
+
+                              if (
+                                activePoint.x >= minX - 0.001 &&
+                                activePoint.x <= maxX + 0.001 &&
+                                activePoint.y >= minY - 0.001 &&
+                                activePoint.y <= maxY + 0.001
+                              ) {
+                                pts.push(activePoint);
+                                break;
+                              }
+                            }
+                          }
+                        }
+
+                        const activePathStr = pts
+                          .map((pt, i) => {
+                            const xPercent = ((pt.x + 0.5) / numCols) * 100;
+                            const yPercent = pt.y * 100;
+                            return `${i === 0 ? 'M' : 'L'} ${xPercent}% ${yPercent}%`;
+                          })
+                          .join(' ');
+
+                        return (
+                          <path
+                            d={activePathStr}
+                            fill="none"
+                            stroke={activeRes.participantColor}
+                            strokeWidth="6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            filter="url(#activeGlow)"
+                          />
+                        );
+                      })()}
+                  </svg>
+
+                  {activeParticipantId &&
+                    activePoint &&
+                    (() => {
+                      const activeParticipant = participants.find((p) => p.id === activeParticipantId);
+                      const xPercent = ((activePoint.x + 0.5) / numCols) * 100;
+                      const yPercent = activePoint.y * 100;
+
+                      return (
+                        <div
+                          className="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none transition-all duration-75 flex flex-col items-center"
+                          style={{ left: `${xPercent}%`, top: `${yPercent}%` }}
+                        >
+                          <div
+                            className="w-7 h-7 rounded-full border-2 border-white shadow-lg flex items-center justify-center font-bold text-xs text-white animate-pulse"
+                            style={{
+                              backgroundColor: activeParticipant?.color || '#3B82F6',
+                              boxShadow: `0 0 16px ${activeParticipant?.color || '#3B82F6'}`,
+                            }}
+                          >
+                            {activeParticipant?.avatarChar || '★'}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                </div>
+
+                {/* Bottom Row: Prizes */}
+                <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: `repeat(${numCols}, minmax(0, 1fr))` }}>
+                  {prizes.map((prize, idx) => {
+                    const winnerResult = results.find(
+                      (r) => r.endCol === idx && completedIds.has(r.participantId)
+                    );
+
+                    return (
+                      <div
+                        key={prize.id}
+                        title={prize.name}
+                        className={`relative flex flex-col items-center p-2.5 rounded-2xl border text-center transition-all ${
+                          prize.isSpecial
+                            ? 'bg-gradient-to-b from-amber-50 to-orange-50 border-amber-300 ring-2 ring-amber-300/60 shadow-sm'
+                            : 'bg-white border-slate-200'
+                        }`}
+                      >
+                        {prize.isSpecial && (
+                          <div className="absolute -top-2.5 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white text-[10px] font-black shadow-xs flex items-center gap-1">
+                            <span>🎈</span>
+                            <span>특별 경품</span>
+                          </div>
+                        )}
+
+                        <div
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold mb-1 ${
+                            prize.isSpecial
+                              ? 'bg-amber-400 text-amber-950 font-black'
+                              : 'bg-slate-100 text-slate-700'
+                          }`}
+                        >
+                          {idx + 1}
+                        </div>
+
+                        <span
+                          className={`text-xs font-bold leading-tight truncate w-full px-1 ${
+                            prize.isSpecial ? 'text-amber-900 font-extrabold' : 'text-slate-800'
+                          }`}
+                        >
+                          {prize.name}
+                        </span>
+
+                        {winnerResult ? (
+                          <div
+                            className={`mt-2 w-full py-1 px-1.5 rounded-xl text-center text-xs font-bold border transition-all ${
+                              prize.isSpecial
+                                ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-xs'
+                                : 'bg-slate-900 text-white border-slate-900'
+                            }`}
+                            style={{
+                              borderColor: winnerResult.participantColor,
+                            }}
+                          >
+                            <div className="text-[10px] opacity-80 font-normal">당첨자</div>
+                            <div className="truncate font-black">{winnerResult.participantName}</div>
+                          </div>
+                        ) : (
+                          <div className="mt-2 text-[10px] text-slate-400 font-medium py-1">
+                            미추첨
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Helper Footer strip */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 px-2">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
+                  <span>🎈 특별 지정 경품 (당첨 시 대형 축하 풍선 발동)</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300 inline-block" />
+                  <span>일반 경품</span>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span>진행 상황: {completedIds.size} / {participants.length} 완료</span>
+                {allCompleted && (
+                  <button
+                    onClick={onViewSummary}
+                    className="font-bold text-amber-600 hover:text-amber-700 underline underline-offset-2"
+                  >
+                    전체 결과표 바로가기 →
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // =========================================================================
+      // components/BalloonWinnerModal.tsx
+      // =========================================================================
+      const BalloonWinnerModal = ({ winner, onClose, onViewSummary }) => {
+        const [isPopped, setIsPopped] = useState(false);
+        const [scaleUp, setScaleUp] = useState(false);
+        const canvasRef = useRef(null);
+
+        useEffect(() => {
+          if (winner) {
+            setIsPopped(false);
+            setScaleUp(false);
+
+            soundManager.playBalloonInflate();
+            const timer = setTimeout(() => {
+              setScaleUp(true);
+              soundManager.playSpecialFanfare();
+              if (canvasRef.current) {
+                launchConfetti(canvasRef.current, { count: 200, spread: 1.2 });
+              }
+            }, 250);
+
+            return () => clearTimeout(timer);
+          }
+        }, [winner]);
+
+        if (!winner) return null;
+
+        const handlePopBalloon = (e) => {
+          e.stopPropagation();
+          if (isPopped) return;
+          setIsPopped(true);
+          soundManager.playPop();
+          if (canvasRef.current) {
+            launchConfetti(canvasRef.current, { count: 300, originX: 0.5, originY: 0.45, spread: 1.8 });
+          }
+        };
+
+        const balloonColor = winner.participantColor || '#EF4444';
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+            <canvas
+              ref={canvasRef}
+              className="pointer-events-none fixed inset-0 z-20 w-full h-full"
+            />
+
+            <div className="relative z-30 w-full max-w-xl flex flex-col items-center text-center">
+              <button
+                onClick={onClose}
+                className="absolute -top-3 right-0 sm:-right-4 p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 rounded-full transition-colors"
+                aria-label="닫기"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-purple-500/20 border border-amber-400/40 text-amber-300 text-sm font-semibold mb-3 shadow-lg backdrop-blur-sm">
+                <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+                <span>★ 특별 지정 경품 당첨 ★</span>
+                <PartyPopper className="w-4 h-4 text-amber-300" />
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+                행운의 주인공 탄생!
+              </h2>
+              <p className="text-slate-300 text-sm sm:text-base max-w-md mb-6">
+                지정된 최고 특별 경품 <span className="font-bold text-amber-300 underline underline-offset-4 decoration-amber-400">[{winner.prizeName}]</span>의 주인공이 결정되었습니다!
+              </p>
+
+              <div className="relative my-2 select-none flex flex-col items-center">
+                {!isPopped ? (
+                  <div
+                    onClick={handlePopBalloon}
+                    title="풍선을 클릭하면 팡! 터뜨릴 수 있습니다"
+                    className={`cursor-pointer group relative flex flex-col items-center transition-all duration-700 ease-out transform ${
+                      scaleUp ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
+                    }`}
+                    style={{
+                      animation: 'balloonFloat 3.6s ease-in-out infinite alternate',
+                    }}
+                  >
+                    <div className="relative w-64 sm:w-76 md:w-80 h-76 sm:h-88 md:h-96 flex items-center justify-center drop-shadow-2xl">
+                      <svg
+                        viewBox="0 0 300 360"
+                        className="w-full h-full filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover:scale-[1.02]"
+                      >
+                        <defs>
+                          <radialGradient id={`balloonGrad-${winner.participantId}`} cx="35%" cy="30%" r="70%">
+                            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
+                            <stop offset="25%" stopColor={balloonColor} stopOpacity="0.95" />
+                            <stop offset="85%" stopColor={balloonColor} />
+                            <stop offset="100%" stopColor="#000000" stopOpacity="0.65" />
+                          </radialGradient>
+
+                          <linearGradient id="glossGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.75" />
+                            <stop offset="60%" stopColor="#FFFFFF" stopOpacity="0.1" />
+                            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+
+                        <path
+                          d="M 150 15
+                             C 235 15, 290 80, 290 170
+                             C 290 250, 215 310, 160 325
+                             L 155 332
+                             L 145 332
+                             L 140 325
+                             C 85 310, 10 250, 10 170
+                             C 10 80, 65 15, 150 15 Z"
+                          fill={`url(#balloonGrad-${winner.participantId})`}
+                        />
+
+                        <ellipse
+                          cx="100"
+                          cy="95"
+                          rx="55"
+                          ry="35"
+                          transform="rotate(-25 100 95)"
+                          fill="url(#glossGrad)"
+                        />
+
+                        <circle cx="80" cy="145" r="7" fill="#FFFFFF" fillOpacity="0.45" />
+
+                        <polygon
+                          points="140,325 160,325 165,340 135,340"
+                          fill={balloonColor}
+                          stroke="#000000"
+                          strokeOpacity="0.3"
+                          strokeWidth="1.5"
+                        />
+                        <ellipse cx="150" cy="340" rx="8" ry="4" fill="#1E293B" fillOpacity="0.3" />
+
+                        <path
+                          d="M 150 342 Q 135 375, 165 410 T 140 460"
+                          fill="none"
+                          stroke="#F1F5F9"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeDasharray="4 2"
+                          opacity="0.85"
+                        />
+                      </svg>
+
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 pointer-events-none pb-8">
+                        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-amber-300 mb-2 border border-white/30 shadow-sm animate-pulse">
+                          <Trophy className="w-5 h-5 fill-amber-300 text-amber-300" />
+                        </div>
+
+                        <span className="text-xs uppercase tracking-widest font-bold text-white/90 drop-shadow mb-1">
+                          WINNER
+                        </span>
+
+                        <div className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)] px-4 py-1 leading-tight max-w-[240px] truncate">
+                          {winner.participantName}
+                        </div>
+
+                        <div className="mt-2 text-xs font-semibold px-3 py-1 rounded-full bg-black/35 text-white/95 backdrop-blur-xs border border-white/25 shadow-xs">
+                          🎉 당첨을 축하합니다!
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 text-xs text-slate-300 font-medium flex items-center gap-1.5 bg-slate-900/60 px-3.5 py-1.5 rounded-full border border-slate-700/60">
+                      <span>🎈 풍선을 클릭하면 팡! 터뜨릴 수 있어요</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-8 px-6 flex flex-col items-center animate-in zoom-in-75 duration-300">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-400 to-rose-500 flex items-center justify-center text-white text-4xl shadow-xl mb-4 animate-bounce">
+                      💥
+                    </div>
+                    <h3 className="text-3xl font-black text-white tracking-tight mb-2">
+                      펑! 축하합니다!
+                    </h3>
+                    <div className="text-2xl font-bold text-amber-300 mb-2">
+                      {winner.participantName} 님
+                    </div>
+                    <p className="text-slate-300 text-sm">
+                      풍선이 터지며 행운이 퍼졌습니다! 특별 경품 획득!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3 w-full">
+                {!isPopped && (
+                  <button
+                    onClick={handlePopBalloon}
+                    className="px-5 py-2.5 text-sm font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-xl transition-all shadow-lg shadow-amber-500/25 active:scale-95 flex items-center gap-2"
+                  >
+                    <span>🎈 풍선 팡! 터뜨리기</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={onViewSummary}
+                  className="px-5 py-2.5 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <Trophy className="w-4 h-4 text-emerald-400" />
+                  <span>전체 결과표 보기</span>
+                </button>
+
+                <button
+                  onClick={onClose}
+                  className="px-5 py-2.5 text-sm font-semibold text-slate-300 hover:text-white bg-transparent hover:bg-slate-800/60 rounded-xl transition-all"
+                >
+                  사다리판으로 돌아가기
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // =========================================================================
+      // components/SummaryModal.tsx
+      // =========================================================================
+      const SummaryModal = ({
+        results,
+        onClose,
+        onPlayAgain,
+        onGoToSetup,
+        onReplayBalloon,
+      }) => {
+        const [copied, setCopied] = useState(false);
+        const [isExporting, setIsExporting] = useState(false);
+        const [exportSuccess, setExportSuccess] = useState(false);
+
+        const specialWinners = results.filter((r) => r.isSpecial);
+
+        const handleSaveImage = async () => {
+          if (isExporting) return;
+          setIsExporting(true);
+          setExportSuccess(false);
+
+          const success = await exportResultsToJpg(results, '윤관의 랜덤 사다리~~ 게임 최종 결과');
+          setIsExporting(false);
+          if (success) {
+            setExportSuccess(true);
+            setTimeout(() => setExportSuccess(false), 3000);
+          }
+        };
+
+        const handleCopy = () => {
+          const lines = [
+            '🎉 [윤관의 랜덤 사다리~~ 게임 최종 결과] 🎉',
+            '----------------------------------------',
+            ...results.map((r, idx) => {
+              const specialMark = r.isSpecial ? ' 🎈 [★특별 경품★]' : '';
+              return `${idx + 1}. ${r.participantName}  ➡️  ${r.prizeName}${specialMark}`;
+            }),
+            '----------------------------------------',
+            '모두 축하드립니다! 🎁',
+          ];
+
+          navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          });
+        };
+
+        return (
+          <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="p-5 sm:p-6 bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 text-white flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xs">
+                    <Trophy className="w-5 h-5 text-amber-300" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+                      윤관의 랜덤 사다리~~ 게임 최종 결과
+                    </h2>
+                    <p className="text-xs sm:text-sm text-white/90">
+                      총 {results.length}명의 참여자에게 경품이 성공적으로 매핑되었습니다
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                  aria-label="닫기"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {specialWinners.length > 0 && (
+                <div className="bg-amber-50 border-b border-amber-200 p-4 shrink-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">🎈</span>
+                      <div>
+                        <div className="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                          <span>특별 지정 경품 당첨자</span>
+                        </div>
+                        <div className="text-sm font-bold text-slate-900 mt-0.5">
+                          {specialWinners.map((w) => `${w.participantName} (${w.prizeName})`).join(', ')}
+                        </div>
+                      </div>
+                    </div>
+
+                    {specialWinners[0] && (
+                      <button
+                        onClick={() => onReplayBalloon(specialWinners[0])}
+                        className="px-3 py-1.5 text-xs font-bold bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0 active:scale-95"
+                      >
+                        <PartyPopper className="w-3.5 h-3.5" />
+                        <span>축하 풍선 다시 보기</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="p-5 sm:p-6 overflow-y-auto space-y-2.5 flex-1">
+                {results.map((item, idx) => (
+                  <div
+                    key={item.participantId}
+                    className={`p-3 rounded-2xl border flex items-center justify-between gap-3 transition-all ${
+                      item.isSpecial
+                        ? 'bg-amber-50/70 border-amber-300 ring-2 ring-amber-300/60 shadow-xs'
+                        : 'bg-slate-50/80 border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs"
+                        style={{ backgroundColor: item.participantColor }}
+                      >
+                        {idx + 1}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-slate-900 truncate">
+                          {item.participantName}
+                        </div>
+                        <div className="text-xs text-slate-500 font-medium">
+                          참여자 #{idx + 1}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right flex items-center gap-2">
+                      <div className="text-right">
+                        <div
+                          className={`text-sm font-extrabold truncate max-w-[180px] sm:max-w-xs ${
+                            item.isSpecial ? 'text-amber-950 font-black' : 'text-slate-900'
+                          }`}
+                        >
+                          {item.prizeName}
+                        </div>
+                        {item.isSpecial && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700">
+                            <span>🎈 특별 지정 경품</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {item.isSpecial && (
+                        <button
+                          onClick={() => onReplayBalloon(item)}
+                          title="풍선 연출 다시 보기"
+                          className="p-1.5 text-xs text-amber-800 bg-amber-200 hover:bg-amber-300 rounded-lg transition-colors ml-1"
+                        >
+                          🎈
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center flex-wrap gap-2">
+                  <button
+                    onClick={handleSaveImage}
+                    disabled={isExporting}
+                    className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl transition-all shadow-xs flex items-center gap-2 active:scale-95"
+                  >
+                    {exportSuccess ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-300" />
+                        <span>JPG 저장 완료!</span>
+                      </>
+                    ) : isExporting ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>이미지 생성 중...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 text-white" />
+                        <span>결과 이미지(JPG) 저장</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={handleCopy}
+                    className="px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-800 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl transition-all shadow-xs flex items-center gap-2 active:scale-95"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-emerald-700 font-bold">복사 완료!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 text-slate-600" />
+                        <span>텍스트 복사</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onGoToSetup}
+                    className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all flex items-center gap-1.5"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    <span>설정 수정</span>
+                  </button>
+
+                  <button
+                    onClick={onPlayAgain}
+                    className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>사다리 다시 타기</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // =========================================================================
+      // App.tsx
+      // =========================================================================
+      const INITIAL_PRIZES = [
+        { id: 'prize-1', name: '1등: 백화점 상품권 10만원', isSpecial: true },
+        { id: 'prize-2', name: '2등: 한우 선물세트', isSpecial: false },
+        { id: 'prize-3', name: '3등: 치킨 기프티콘', isSpecial: false },
+        { id: 'prize-4', name: '배달의민족 2만원권', isSpecial: false },
+        { id: 'prize-5', name: '스타벅스 디저트 세트', isSpecial: false },
+        { id: 'prize-6', name: '올리브영 1만원권', isSpecial: false },
+        { id: 'prize-7', name: '영화 2인 관람권', isSpecial: false },
+        { id: 'prize-8', name: '편의점 5천원권', isSpecial: false },
+        { id: 'prize-9', name: '비타500 한 상자', isSpecial: false },
+        { id: 'prize-10', name: '다음 기회에 (참가상)', isSpecial: false },
+      ];
+
+      function App() {
+        const [participants, setParticipants] = useState(() =>
+          DEFAULT_NAMES.slice(0, 10).map((name, i) => {
+            const pal = getPaletteForIndex(i);
+            return {
+              id: `p-${i + 1}`,
+              name,
+              color: pal.color,
+              bgLight: pal.bgLight,
+              border: pal.border,
+              textColor: pal.text,
+              avatarChar: name.charAt(0),
+            };
+          })
+        );
+
+        const [prizes, setPrizes] = useState(INITIAL_PRIZES);
+        const [screen, setScreen] = useState('SETUP');
+        const [isMuted, setIsMuted] = useState(false);
+        const [ladderSeed, setLadderSeed] = useState(1);
+        const [specialWinnerForBalloon, setSpecialWinnerForBalloon] = useState(null);
+
+        const rungs = useMemo(() => {
+          void ladderSeed;
+          return generateLadderRungs(participants.length, 'normal');
+        }, [participants.length, ladderSeed]);
+
+        const results = useMemo(() => {
+          return computeAllResults(participants, prizes, rungs);
+        }, [participants, prizes, rungs]);
+
+        const handleReshuffleRungs = useCallback(() => {
+          setLadderSeed((s) => s + 1);
+        }, []);
+
+        const handleToggleSound = () => {
+          const muted = soundManager.toggleMute();
+          setIsMuted(muted);
+        };
+
+        const hasSpecialPrize = prizes.some((p) => p.isSpecial);
+
+        return (
+          <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-amber-200">
+            <TopBar
+              currentScreen={screen}
+              onNavigate={(newScreen) => setScreen(newScreen)}
+              isMuted={isMuted}
+              onToggleSound={handleToggleSound}
+              onResetOrShuffle={handleReshuffleRungs}
+              hasSpecialPrize={hasSpecialPrize}
+            />
+
+            <main className="flex-1 pb-16">
+              {screen === 'SETUP' && (
+                <SetupView
+                  participants={participants}
+                  prizes={prizes}
+                  onUpdateParticipants={setParticipants}
+                  onUpdatePrizes={setPrizes}
+                  onStartGame={() => setScreen('LADDER')}
+                />
+              )}
+
+              {screen === 'LADDER' && (
+                <LadderBoard
+                  participants={participants}
+                  prizes={prizes}
+                  rungs={rungs}
+                  results={results}
+                  onReshuffleRungs={handleReshuffleRungs}
+                  onRevealSpecialWinner={(winner) => setSpecialWinnerForBalloon(winner)}
+                  onViewSummary={() => setScreen('SUMMARY')}
+                />
+              )}
+
+              {screen === 'SUMMARY' && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+                  <SummaryModal
+                    results={results}
+                    onClose={() => setScreen('LADDER')}
+                    onPlayAgain={() => {
+                      handleReshuffleRungs();
+                      setScreen('LADDER');
+                    }}
+                    onGoToSetup={() => setScreen('SETUP')}
+                    onReplayBalloon={(result) => setSpecialWinnerForBalloon(result)}
+                  />
+                </div>
+              )}
+            </main>
+
+            <BalloonWinnerModal
+              winner={specialWinnerForBalloon}
+              onClose={() => setSpecialWinnerForBalloon(null)}
+              onViewSummary={() => {
+                setSpecialWinnerForBalloon(null);
+                setScreen('SUMMARY');
+              }}
+            />
+          </div>
+        );
+      }
+
+      const container = document.getElementById('root');
+      if (container) {
+        ReactDOM.createRoot(container).render(<App />);
+      }
+    </script>
+  </body>
+</html>
